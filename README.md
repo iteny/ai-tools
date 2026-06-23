@@ -1,6 +1,3 @@
-# ai-tools
-ai工具
-
 [谷歌gemini](https://gemini.google.com/)
 
 [libtv](https://www.liblib.tv/?sourceId=005751)
@@ -20,6 +17,14 @@ ai工具
 [deepseek开放平台](https://platform.deepseek.com/)
 
 [资源网站](https://tools.liumingye.cn/)
+
+[下载音频](http://qjjlb.quanjian.com.cn/musicdl/) [备用](https://netease-music.fe-mm.com/#/music/search)
+
+[suno音乐ai](https://suno.com)
+
+[minimax语音](https://www.minimaxi.com/audio/music)
+
+[游戏ai工具](https://frameronin.com/)
 
 谷歌浏览器插件猫抓，可以下载音频文件
 
