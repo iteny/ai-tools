@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smile 图片抠图工具 Pro</title>
+  <style>
+:root {
+  color-scheme: dark;
+  /* Apple Liquid Glass Color Palette */
+  --page: #000000;
+  --panel: rgba(28, 28, 30, 0.6);
+  --panel-2: rgba(44, 44, 46, 0.5);
+  --panel-3: rgba(58, 58, 60, 0.6);
+  --glass: rgba(255, 255, 255, 0.08);
+  --glass-hover: rgba(255, 255, 255, 0.12);
+  --glass-active: rgba(255, 255, 255, 0.16);
+  --line: rgba(255, 255, 255, 0.1);
+  --line-light: rgba(255, 255, 255, 0.2);
+  --muted: #8e8e93;
+  --muted-light: #aeaeb2;
+  --text: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  
+  /* Apple System Colors */
+  --cyan: #0a84ff;
+  --cyan-glow: rgba(10, 132, 255, 0.4);
+  --green: #30d158;
+  --green-glow: rgba(48, 209, 88, 0.4);
+  --red: #ff453a;
+  --orange: #ff9f0a;
+  --yellow: #ffd60a;
+  --purple: #bf5af2;
+  --pink: #ff375f;
+  
+  /* Liquid Glass Effects */
+  --blur-lg: blur(40px);
+  --blur-md: blur(20px);
+  --blur-sm: blur(10px);
+  --radius: 20px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* Liquid Glass Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-glow: 0 0 60px rgba(10, 132, 255, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  background: var(--page);
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% -10%, rgba(10, 132, 255, 0.15), transparent),
+    radial-gradient(ellipse 80% 50% at 20% 100%, rgba(191, 90, 242, 0.1), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(48, 209, 88, 0.08), transparent);
+  color: var(--text);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+/* ── App Shell ── */
+.app-shell {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Topbar (Liquid Glass) ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 24px;
+  background: var(--glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.brand-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.brand-icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(10, 132, 255, 0.9), rgba(191, 90, 242, 0.9));
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: 
+    0 4px 20px rgba(10, 132, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.version-badge {
+  color: var(--orange);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(255, 159, 10, 0.15);
+  border: 1px solid rgba(255, 159, 10, 0.25);
+  backdrop-filter: var(--blur-sm);
+}
+
+.top-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ── Liquid Glass Buttons ── */
+.primary-file,
+button {
+  min-height: 36px;
+  border-radius: var(--radius-xs);
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text);
+  background: var(--glass);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 500;
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+}
+
+.primary-file {
+  background: linear-gradient(180deg, rgba(10, 132, 255, 0.9), rgba(10, 132, 255, 0.7));
+  border-color: rgba(255, 255, 255, 0.15);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 
+    0 4px 20px rgba(10, 132, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.primary-file:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 6px 24px rgba(10, 132, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: linear-gradient(180deg, rgba(10, 132, 255, 1), rgba(10, 132, 255, 0.8));
+}
+
+.primary-file:active {
+  transform: translateY(0);
+}
+
+.primary-file input {
+  display: none;
+}
+
+.ghost {
+  background: var(--glass);
+  border-color: var(--line);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--glass-hover);
+  border-color: var(--line-light);
+  transform: translateY(-1px);
+}
+
+.compact-btn {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.success {
+  background: linear-gradient(180deg, rgba(48, 209, 88, 0.9), rgba(48, 209, 88, 0.7));
+  border-color: rgba(255, 255, 255, 0.15);
+  font-weight: 600;
+  box-shadow: 
+    0 4px 20px rgba(48, 209, 88, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.success:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 6px 24px rgba(48, 209, 88, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: linear-gradient(180deg, rgba(48, 209, 88, 1), rgba(48, 209, 88, 0.8));
+}
+
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+button.is-active,
+.mask-tool-btn.is-active {
+  border-color: var(--cyan);
+  background: rgba(10, 132, 255, 0.25);
+  color: white;
+  box-shadow: 
+    0 0 0 1px var(--cyan),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mask-tool-erase.is-active {
+  border-color: var(--red);
+  background: rgba(255, 69, 58, 0.25);
+  box-shadow: 
+    0 0 0 1px var(--red),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.danger-ghost {
+  border-color: rgba(255, 69, 58, 0.3);
+  color: #ff6b6b;
+}
+
+.danger-ghost:hover:not(:disabled) {
+  background: rgba(255, 69, 58, 0.15);
+}
+
+/* ── Workspace Layout ── */
+.matting-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  gap: 1px;
+}
+
+.matting-stage {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 16px;
+  background: transparent;
+}
+
+/* ── Pathbar (Liquid Glass) ── */
+.matting-pathbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.pathbar-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pathbar-info span,
+.pathbar-info em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.pathbar-info strong {
+  min-width: 80px;
+  flex: 0 1 auto;
+  max-width: 400px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.matting-toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.preview-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mask-paint-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.brush-size-control {
+  min-width: 140px;
+  display: inline-grid;
+  grid-template-columns: auto 70px 28px;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.brush-size-control input {
+  width: 70px;
+  min-width: 0;
+  margin: 0;
+}
+
+.brush-size-control output {
+  color: var(--text);
+  text-align: right;
+  font-weight: 500;
+}
+
+.preview-color {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  margin: 0;
+  padding: 2px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line);
+  background: var(--glass);
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+
+.preview-color:hover {
+  transform: scale(1.05);
+}
+
+.preview-color.is-hidden {
+  display: none;
+}
+
+/* ── Drop Zone / Canvas (Liquid Glass) ── */
+.matting-drop-zone {
+  position: relative;
+  min-height: 0;
+  height: 100%;
+  padding: 12px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.03) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.03) 75%);
+  background-color: rgba(20, 20, 22, 0.5);
+  background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+  background-size: 24px 24px;
+  border: 1px solid var(--line);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    var(--shadow-md);
+  transition: all var(--transition);
+}
+
+.matting-drop-zone.dragover {
+  border-color: var(--cyan);
+  box-shadow: 
+    inset 0 0 0 2px var(--cyan),
+    0 0 40px rgba(10, 132, 255, 0.2);
+}
+
+.matting-drop-zone.is-panning #resultCanvas {
+  cursor: grabbing;
+}
+
+.matting-drop-zone.is-masking #resultCanvas {
+  cursor: crosshair;
+}
+
+.matting-drop-zone.is-magic-wand #resultCanvas {
+  cursor: crosshair;
+}
+
+.matting-drop-zone.is-sampling #resultCanvas {
+  cursor: crosshair;
+}
+
+#sourceCanvas,
+#resultCanvas,
+#protectCanvas,
+#alphaCanvas,
+#compareCanvas {
+  height: auto;
+  display: block;
+}
+
+#resultCanvas,
+#protectCanvas,
+#compareCanvas {
+  width: auto;
+  max-width: none;
+  max-height: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-xs);
+  cursor: grab;
+  transform-origin: center center;
+  will-change: transform;
+  box-shadow: var(--shadow-lg);
+}
+
+#protectCanvas {
+  pointer-events: none;
+  border-color: transparent;
+}
+
+#compareCanvas {
+  pointer-events: none;
+  border-color: transparent;
+  clip-path: inset(0 50% 0 0);
+}
+
+#resultCanvas.is-hidden {
+  display: none;
+}
+
+.hidden-canvas {
+  display: none !important;
+}
+
+/* ── Empty State ── */
+.empty-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  text-align: center;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.empty-icon {
+  font-size: 72px;
+  opacity: 0.4;
+  margin-bottom: 12px;
+  filter: blur(0.5px);
+}
+
+.empty-state strong {
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.empty-state span {
+  font-size: 14px;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* ── Zoom & Processing Indicators (Liquid Glass) ── */
+.zoom-indicator {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-md);
+}
+
+.zoom-indicator.is-hidden {
+  display: none;
+}
+
+.zoom-indicator span {
+  min-width: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.processing-indicator {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-md);
+}
+
+.processing-indicator.is-hidden {
+  display: none;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid var(--line-light);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Sidebar (Liquid Glass) ── */
+.matting-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  max-height: 100%;
+  overflow: auto;
+  padding: 16px;
+  background: var(--glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border-left: 1px solid var(--line);
+}
+
+.matting-side::-webkit-scrollbar {
+  width: 8px;
+}
+
+.matting-side::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.matting-side::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.matting-side::-webkit-scrollbar-thumb:hover {
+  background: var(--line-light);
+}
+
+/* ── Settings Panel (Liquid Glass) ── */
+.settings-panel {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--glass);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.preset-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── Settings Grid ── */
+.matting-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 14px;
+  align-items: end;
+}
+
+.matting-settings-grid label.full-width,
+.matting-settings-grid .auto-matte-btn {
+  grid-column: 1 / -1;
+}
+
+.matting-settings-grid button {
+  width: 100%;
+}
+
+label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  display: block;
+}
+
+label.is-hidden {
+  display: none;
+}
+
+label input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]) {
+  width: 100%;
+  height: 36px;
+  margin-top: 6px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--transition);
+}
+
+label input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus {
+  border-color: var(--cyan);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.15);
+}
+
+select,
+input[type="number"] {
+  width: 100%;
+  height: 36px;
+  margin-top: 6px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--transition);
+  cursor: pointer;
+}
+
+select:focus,
+input[type="number"]:focus {
+  border-color: var(--cyan);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.15);
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e8e93' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+input[type="color"] {
+  width: 100%;
+  height: 36px;
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  background: rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  padding: 3px;
+  transition: transform var(--transition);
+}
+
+input[type="color"]:hover {
+  transform: scale(1.02);
+}
+
+input[type="range"] {
+  width: 100%;
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+  outline: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  border: none;
+  transition: transform var(--transition);
+}
+
+output {
+  float: right;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Export Section ── */
+.project-name-field {
+  display: block;
+  margin-top: 10px;
+}
+
+.project-name-field input,
+.project-name-field select {
+  width: 100%;
+  height: 38px;
+  margin-top: 6px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.export-folder-wide {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 10px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* ── Shortcuts Panel ── */
+.shortcuts-panel {
+  flex-shrink: 0;
+}
+
+.shortcuts-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+kbd {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 11px;
+  font-family: "SF Mono", Consolas, monospace;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Utilities ── */
+.is-hidden {
+  display: none !important;
+}
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .matting-workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(300px, 1fr) auto;
+  }
+
+  .matting-side {
+    border-left: none;
+    border-top: 1px solid var(--line);
+    max-height: 50vh;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    padding: 12px 16px;
+  }
+
+  .matting-toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .shortcuts-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Hover Glow Effects ── */
+button:not(:disabled):hover {
+  box-shadow: 
+    var(--shadow-sm),
+    0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+/* ── Focus States ── */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+</style>
+</head>
+<body>
+  <main class="app-shell matting-app">
+    <header class="topbar">
+      <div class="brand-title">
+        <div class="brand-icon">S</div>
+        <div>
+          <p class="eyebrow">Smile 图片处理</p>
+          <h1>图片抠图工具 <span class="version-badge">Pro V2.0</span></h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="undoBtn" class="ghost compact-btn" type="button" disabled title="撤销 (Ctrl+Z)">↶ 撤销</button>
+        <button id="redoBtn" class="ghost compact-btn" type="button" disabled title="重做 (Ctrl+Y)">↷ 重做</button>
+        <label class="primary-file">
+          <input id="imageInput" type="file" accept="image/*">
+          <span>📂 选择图片</span>
+        </label>
+      </div>
+    </header>
+
+    <section class="matting-workspace">
+      <section class="matting-stage">
+        <div class="matting-pathbar">
+          <div class="pathbar-info">
+            <span>当前图片</span>
+            <strong id="imagePath">未选择图片</strong>
+            <em id="imageInfo">未载入</em>
+          </div>
+          <div class="matting-toolbar-row">
+            <div class="mask-paint-toolbar" aria-label="区域涂抹工具">
+              <button class="ghost compact-btn mask-tool-btn" type="button" data-mask-tool="protect" disabled title="涂抹保护区域 (P)">🛡 保护</button>
+              <button class="ghost compact-btn mask-tool-btn mask-tool-erase" type="button" data-mask-tool="erase" disabled title="涂抹删除区域 (E)">✂ 删除</button>
+              <button class="ghost compact-btn mask-tool-btn mask-tool-erase" type="button" data-mask-tool="magic" disabled title="魔棒删除 (M)">🔮 魔棒</button>
+              <label class="brush-size-control" title="笔刷大小">
+                <span>笔刷</span>
+                <input id="brushSizeInput2" type="range" min="4" max="160" value="48" disabled>
+                <output id="brushSizeValue2">48</output>
+              </label>
+              <button id="clearPaintMasksBtn" class="ghost compact-btn" type="button" disabled title="清空涂抹">🗑 清空</button>
+            </div>
+            <div class="preview-toolbar" aria-label="预览模式">
+              <input id="previewBgInput" class="preview-color is-hidden" type="color" value="#111827" aria-label="预览背景色" disabled>
+              <button class="ghost compact-btn preview-mode-btn is-active" type="button" data-preview-mode="checker" disabled title="透明棋盘预览">棋盘</button>
+              <button class="ghost compact-btn preview-mode-btn" type="button" data-preview-mode="solid" disabled title="纯色背景预览">背景</button>
+              <button class="ghost compact-btn preview-mode-btn" type="button" data-preview-mode="alpha" disabled title="Alpha通道预览">Alpha</button>
+              <button class="ghost compact-btn preview-mode-btn" type="button" data-preview-mode="compare" disabled title="前后对比">对比</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="imageDropZone" class="matting-drop-zone">
+          <canvas id="resultCanvas" class="is-hidden" width="900" height="620"></canvas>
+          <canvas id="compareCanvas" class="hidden-canvas" width="900" height="620"></canvas>
+          <canvas id="protectCanvas" class="hidden-canvas" width="900" height="620"></canvas>
+          <div id="imageEmptyState" class="empty-state">
+            <div class="empty-icon">🖼️</div>
+            <strong>拖入或选择本地图片</strong>
+            <span>支持 PNG、JPG、WebP。图片只在浏览器内处理，不会上传服务器。</span>
+          </div>
+          <div id="zoomIndicator" class="zoom-indicator is-hidden">
+            <span id="zoomLevel">100%</span>
+            <button id="zoomFitBtn" class="ghost compact-btn" type="button" title="适应窗口 (F)">⤢</button>
+            <button id="zoom100Btn" class="ghost compact-btn" type="button" title="100% (1)">1:1</button>
+          </div>
+          <div id="processingIndicator" class="processing-indicator is-hidden">
+            <div class="spinner"></div>
+            <span>处理中...</span>
+          </div>
+        </div>
+
+        <canvas id="sourceCanvas" class="hidden-canvas" width="900" height="620"></canvas>
+        <canvas id="alphaCanvas" class="hidden-canvas" width="900" height="620"></canvas>
+      </section>
+
+      <aside class="matting-side">
+        <article class="settings-panel side-settings">
+          <div class="section-title">
+            <h2>⚙️ 抠图参数</h2>
+            <div class="preset-actions">
+              <button id="savePresetBtn" class="ghost compact-btn" type="button" disabled>保存预设</button>
+              <button id="deletePresetBtn" class="ghost compact-btn danger-ghost is-hidden" type="button" disabled>删除</button>
+              <button id="resetBtn" class="ghost compact-btn" type="button" disabled>重置</button>
+            </div>
+          </div>
+          <div class="matting-settings-grid">
+            <label class="full-width">抠图模式
+              <select id="modeInput" disabled>
+                <option value="color">色键抠图</option>
+                <option value="luma-black">去黑底</option>
+                <option value="luma-white">去白底</option>
+                <option value="edge-connected">边缘连通抠图</option>
+              </select>
+            </label>
+            <button id="autoMatteBtn" class="success auto-matte-btn full-width" type="button" disabled>✨ 一键抠图</button>
+            <label data-mode="color">背景色
+              <input id="bgColorInput2" type="color" value="#12c91d" disabled>
+            </label>
+            <button id="sampleColorBtn" class="ghost" type="button" disabled>从图片取样</button>
+            <label data-mode="color">容差
+              <input id="toleranceInput2" type="range" min="0" max="220" value="28" disabled>
+              <output id="toleranceValue2">28</output>
+            </label>
+            <label data-mode="color">边缘柔化
+              <input id="softnessInput2" type="range" min="0" max="160" value="36" disabled>
+              <output id="softnessValue2">36</output>
+            </label>
+            <label data-mode="luma" class="is-hidden">亮度阈值
+              <input id="lumaThresholdInput2" type="range" min="0" max="255" value="35" disabled>
+              <output id="lumaThresholdValue2">35</output>
+            </label>
+            <label data-mode="luma" class="is-hidden">亮度柔化
+              <input id="lumaSoftnessInput2" type="range" min="1" max="180" value="55" disabled>
+              <output id="lumaSoftnessValue2">55</output>
+            </label>
+            <label>Alpha 阈值
+              <input id="alphaCutInput2" type="range" min="0" max="255" value="8" disabled>
+              <output id="alphaCutValue2">8</output>
+            </label>
+            <label>Alpha 扩张
+              <input id="alphaGrowInput2" type="range" min="-4" max="4" value="0" disabled>
+              <output id="alphaGrowValue2">0</output>
+            </label>
+            <label>Alpha 羽化
+              <input id="alphaFeatherInput2" type="range" min="0" max="6" value="1" disabled>
+              <output id="alphaFeatherValue2">1</output>
+            </label>
+            <label data-mode="color">去溢色
+              <input id="despillInput2" type="range" min="0" max="100" value="25" disabled>
+              <output id="despillValue2">25</output>
+            </label>
+            <label>边缘净化
+              <input id="edgeCleanInput2" type="range" min="0" max="100" value="35" disabled>
+              <output id="edgeCleanValue2">35</output>
+            </label>
+            <label>透明像素清理
+              <input id="transparentCleanInput2" type="range" min="0" max="100" value="80" disabled>
+              <output id="transparentCleanValue2">80</output>
+            </label>
+          </div>
+        </article>
+
+        <article class="settings-panel side-settings">
+          <div class="section-title">
+            <h2>📦 导出</h2>
+          </div>
+          <label class="project-name-field">文件名
+            <input id="fileNameInput" type="text" value="SmileMatting" disabled>
+          </label>
+          <label class="project-name-field">忽略小于像素
+            <input id="partMinPixelsInput" type="number" min="0" step="1" value="25" disabled>
+          </label>
+          <label class="project-name-field">导出格式
+            <select id="exportFormatInput" disabled>
+              <option value="png">PNG (透明)</option>
+              <option value="jpeg">JPEG (白底)</option>
+              <option value="webp">WebP (透明)</option>
+            </select>
+          </label>
+          <button id="exportBtn" class="success export-folder-wide" type="button" disabled>💾 导出透明 PNG</button>
+          <button id="exportPartsBtn" class="ghost export-folder-wide" type="button" disabled>📄 导出单图</button>
+          <button id="downloadAlphaBtn" class="ghost export-folder-wide" type="button" disabled>🌫️ 导出 Alpha 蒙版</button>
+        </article>
+
+        <article class="settings-panel side-settings shortcuts-panel">
+          <div class="section-title">
+            <h2>⌨️ 快捷键</h2>
+          </div>
+          <div class="shortcuts-list">
+            <div class="shortcut-item"><kbd>P</kbd> 保护涂抹</div>
+            <div class="shortcut-item"><kbd>E</kbd> 删除涂抹</div>
+            <div class="shortcut-item"><kbd>M</kbd> 魔棒删除</div>
+            <div class="shortcut-item"><kbd>F</kbd> 适应窗口</div>
+            <div class="shortcut-item"><kbd>1</kbd> 100% 缩放</div>
+            <div class="shortcut-item"><kbd>Ctrl+Z</kbd> 撤销</div>
+            <div class="shortcut-item"><kbd>Ctrl+Y</kbd> 重做</div>
+            <div class="shortcut-item"><kbd>滚轮</kbd> 缩放</div>
+          </div>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const els = {
+  imageInput: $("imageInput"), imageDropZone: $("imageDropZone"), imageEmptyState: $("imageEmptyState"),
+  imagePath: $("imagePath"), imageInfo: $("imageInfo"), sourceCanvas: $("sourceCanvas"),
+  previewSourceCanvas: document.createElement("canvas"), resultCanvas: $("resultCanvas"),
+  compareCanvas: $("compareCanvas"), protectCanvas: $("protectCanvas"), alphaCanvas: $("alphaCanvas"),
+  previewBgInput: $("previewBgInput"),
+  previewModeButtons: Array.from(document.querySelectorAll("[data-preview-mode]")),
+  maskToolButtons: Array.from(document.querySelectorAll("[data-mask-tool]")),
+  brushSizeInput: $("brushSizeInput2"), brushSizeValue: $("brushSizeValue2"),
+  clearPaintMasksBtn: $("clearPaintMasksBtn"), modeInput: $("modeInput"), autoMatteBtn: $("autoMatteBtn"),
+  bgColorInput: $("bgColorInput2"), sampleColorBtn: $("sampleColorBtn"),
+  toleranceInput: $("toleranceInput2"), softnessInput: $("softnessInput2"),
+  lumaThresholdInput: $("lumaThresholdInput2"), lumaSoftnessInput: $("lumaSoftnessInput2"),
+  alphaCutInput: $("alphaCutInput2"), alphaGrowInput: $("alphaGrowInput2"), alphaFeatherInput: $("alphaFeatherInput2"),
+  despillInput: $("despillInput2"), edgeCleanInput: $("edgeCleanInput2"), transparentCleanInput: $("transparentCleanInput2"),
+  resetBtn: $("resetBtn"), savePresetBtn: $("savePresetBtn"), deletePresetBtn: $("deletePresetBtn"),
+  fileNameInput: $("fileNameInput"), partMinPixelsInput: $("partMinPixelsInput"), exportFormatInput: $("exportFormatInput"),
+  exportBtn: $("exportBtn"), exportPartsBtn: $("exportPartsBtn"), downloadAlphaBtn: $("downloadAlphaBtn"),
+  undoBtn: $("undoBtn"), redoBtn: $("redoBtn"),
+  zoomIndicator: $("zoomIndicator"), zoomLevel: $("zoomLevel"), zoomFitBtn: $("zoomFitBtn"), zoom100Btn: $("zoom100Btn"),
+  processingIndicator: $("processingIndicator"),
+};
+const sourceCtx = els.sourceCanvas.getContext("2d", { willReadFrequently: true });
+const resultCtx = els.resultCanvas.getContext("2d", { willReadFrequently: true });
+const alphaCtx = els.alphaCanvas.getContext("2d", { willReadFrequently: true });
+const compareCtx = els.compareCanvas.getContext("2d", { willReadFrequently: true });
+const previewSourceCtx = els.previewSourceCanvas.getContext("2d", { willReadFrequently: true });
+
+const state = {
+  image: null, imageUrl: "", sourceName: "SmileMatting", sampling: false, raf: 0,
+  zoom: 1, panX: 0, panY: 0, dragging: false, dragStart: null, dragMoved: false,
+  previewMode: "checker", maskTool: "none", maskPainting: false, lastMaskPoint: null,
+  protectMask: null, protectCount: 0, eraseMask: null, eraseCount: 0,
+  processTimer: 0, processing: false, pendingProcess: false, outputImage: null, alphaImage: null,
+  compareSplit: 0.5, compareDragging: false, history: [], historyIndex: -1,
+};
+const MAX_PREVIEW_PIXELS = 900000;
+const PRESET_STORAGE_KEY = "SmileMattingUserPresetsV1";
+const BUILT_IN_MODES = new Set(["color", "luma-black", "luma-white", "edge-connected"]);
+const PRESET_FIELD_IDS = ["modeInput","bgColorInput","previewBgInput","toleranceInput","softnessInput","lumaThresholdInput","lumaSoftnessInput","alphaCutInput","alphaGrowInput","alphaFeatherInput","despillInput","edgeCleanInput","transparentCleanInput","partMinPixelsInput"];
+const PARAMETER_CONTROL_IDS = ["modeInput","autoMatteBtn","bgColorInput","previewBgInput","sampleColorBtn","toleranceInput","softnessInput","lumaThresholdInput","lumaSoftnessInput","alphaCutInput","alphaGrowInput","alphaFeatherInput","despillInput","edgeCleanInput","transparentCleanInput","partMinPixelsInput","resetBtn","savePresetBtn","deletePresetBtn","fileNameInput","exportFormatInput","exportBtn","exportPartsBtn","downloadAlphaBtn","brushSizeInput","clearPaintMasksBtn"];
+const defaults = { modeInput:"color", bgColorInput:"#12c91d", previewBgInput:"#111827", toleranceInput:28, softnessInput:36, lumaThresholdInput:35, lumaSoftnessInput:55, alphaCutInput:8, alphaGrowInput:0, alphaFeatherInput:1, despillInput:25, edgeCleanInput:35, transparentCleanInput:80, partMinPixelsInput:25 };
+
+const clamp = (v,min,max) => Math.min(max, Math.max(min, v));
+const trimExtension = (n) => n.replace(/\.[^.]+$/, "");
+function safeFileName(name, fallback = "SmileMatting") {
+  const c = String(name||"").trim().replace(/[<>:"/\\|?*\u0000-\u001f]/g,"_").replace(/\s+/g,"_").replace(/_+/g,"_").replace(/[. ]+$/g,"");
+  return c || fallback;
+}
+function hexToRgb(hex) { const v = parseInt(hex.slice(1),16); return {r:(v>>16)&255, g:(v>>8)&255, b:v&255}; }
+function rgbToHex(r,g,b) { return `#${[r,g,b].map(v=>clamp(Math.round(v),0,255).toString(16).padStart(2,"0")).join("")}`; }
+
+function settings() {
+  return { mode: currentMattingMode(), bg: hexToRgb(els.bgColorInput.value),
+    tolerance: +els.toleranceInput.value, softness: +els.softnessInput.value,
+    lumaThreshold: +els.lumaThresholdInput.value, lumaSoftness: +els.lumaSoftnessInput.value,
+    alphaCut: +els.alphaCutInput.value, alphaGrow: +els.alphaGrowInput.value,
+    alphaFeather: +els.alphaFeatherInput.value, despill: +els.despillInput.value/100,
+    edgeClean: +els.edgeCleanInput.value/100, transparentClean: +els.transparentCleanInput.value/100 };
+}
+function updateOutputs() {
+  for (const id of ["tolerance","softness","lumaThreshold","lumaSoftness","alphaCut","alphaGrow","alphaFeather","despill","edgeClean","transparentClean"])
+    $(`${id}Value2`).textContent = $(`${id}Input2`).value;
+  updateModeFields(); scheduleProcess();
+}
+function updateModeFields() {
+  const modeGroup = ["color","edge-connected"].includes(currentMattingMode()) ? "color" : "luma";
+  for (const label of document.querySelectorAll("[data-mode]"))
+    label.classList.toggle("is-hidden", !label.dataset.mode.split(/\s+/).includes(modeGroup));
+  els.sampleColorBtn.disabled = !state.image || modeGroup !== "color";
+  els.sampleColorBtn.classList.toggle("is-active", state.sampling);
+  els.sampleColorBtn.textContent = state.sampling ? "点击预览取样" : "从图片取样";
+  els.imageDropZone.classList.toggle("is-sampling", state.sampling);
+  updatePresetActions();
+}
+function resetSettings() { for (const [id,v] of Object.entries(defaults)) els[id].value = v; state.sampling = false; setPreviewMode("checker"); setMaskToolSelection("none"); updateOutputs(); }
+function setParameterControlsEnabled(enabled) {
+  for (const id of PARAMETER_CONTROL_IDS) { if (!els[id]) continue; els[id].disabled = !enabled; }
+  for (const b of els.previewModeButtons) b.disabled = !enabled;
+  for (const b of els.maskToolButtons) b.disabled = !enabled;
+  updateModeFields();
+}
+function currentMattingMode() { const o = els.modeInput.selectedOptions[0]; return o?.dataset.mode || els.modeInput.value; }
+function selectedPresetId() { return els.modeInput.selectedOptions[0]?.dataset.presetId || ""; }
+function loadUserPresets() { try { const p = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY)||"[]"); return Array.isArray(p)?p.filter(x=>x&&x.id&&x.name&&x.values):[]; } catch { return []; } }
+function saveUserPresets(p) { localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(p)); }
+function presetOptionValue(id) { return `preset:${id}`; }
+function renderPresetOptions(selectedValue = els.modeInput.value) {
+  for (const g of Array.from(els.modeInput.querySelectorAll("[data-preset-group]"))) g.remove();
+  const presets = loadUserPresets();
+  if (presets.length) {
+    const g = document.createElement("optgroup"); g.label = "用户预设"; g.dataset.presetGroup = "user";
+    for (const p of presets) { const o = document.createElement("option"); o.value = presetOptionValue(p.id); o.textContent = p.name; o.dataset.presetId = p.id; o.dataset.mode = p.values.modeInput||"color"; g.append(o); }
+    els.modeInput.append(g);
+  }
+  els.modeInput.value = selectedValue; if (!els.modeInput.value) els.modeInput.value = "color"; updatePresetActions();
+}
+function capturePresetValues() { const v = {}; for (const id of PRESET_FIELD_IDS) { if (id==="modeInput") v[id]=currentMattingMode(); else v[id]=els[id].value; } v.previewMode=state.previewMode; v.maskTool=state.maskTool; return v; }
+function applyPresetValues(values) { for (const id of PRESET_FIELD_IDS) { if (id==="modeInput"||!(id in values)||!els[id]) continue; els[id].value=values[id]; } setPreviewMode(values.previewMode||"checker"); setMaskToolSelection(values.maskTool||"none"); updateOutputs(); }
+function handleModeSelection() { const p = loadUserPresets().find(i=>i.id===selectedPresetId()); if (p) { const o=els.modeInput.selectedOptions[0]; if(o) o.dataset.mode=p.values.modeInput||"color"; applyPresetValues(p.values); return; } updateOutputs(); }
+function saveCurrentPreset() {
+  const id = selectedPresetId(); const presets = loadUserPresets(); const active = presets.find(p=>p.id===id);
+  if (active) { if(!confirm(`覆盖预设"${active.name}"？`)) return; const p={...active,values:capturePresetValues()}; saveUserPresets(presets.map(i=>i.id===active.id?p:i)); renderPresetOptions(presetOptionValue(p.id)); updateModeFields(); return; }
+  const name = prompt("填写预设名字","我的预设"); if(!name||!name.trim()) return; const tn=name.trim();
+  const existing = presets.find(p=>p.name===tn); if(existing&&!confirm(`已存在预设"${tn}"，是否覆盖？`)) return;
+  const p = {id:existing?.id||`preset-${Date.now()}`,name:tn,values:capturePresetValues()};
+  saveUserPresets(existing?presets.map(i=>i.id===existing.id?p:i):[...presets,p]);
+  renderPresetOptions(presetOptionValue(p.id)); updateModeFields();
+}
+function deleteCurrentPreset() {
+  const id = selectedPresetId(); if(!id) return; const presets = loadUserPresets(); const active = presets.find(p=>p.id===id); if(!active) return;
+  if(!confirm(`删除预设"${active.name}"？`)) return;
+  saveUserPresets(presets.filter(p=>p.id!==id));
+  renderPresetOptions(active.values.modeInput&&BUILT_IN_MODES.has(active.values.modeInput)?active.values.modeInput:"color"); updateOutputs();
+}
+function updatePresetActions() { const cs = Boolean(selectedPresetId()); els.deletePresetBtn.classList.toggle("is-hidden",!cs); els.deletePresetBtn.disabled = !state.image||!cs; }
+
+/* ── Image Loading ── */
+function setCanvasSize(w, h) {
+  for (const c of [els.sourceCanvas, els.resultCanvas, els.protectCanvas, els.alphaCanvas, els.compareCanvas]) { c.width=w; c.height=h; }
+  const s = Math.min(1, Math.sqrt(MAX_PREVIEW_PIXELS/Math.max(1,w*h)));
+  els.previewSourceCanvas.width = Math.max(1, Math.round(w*s));
+  els.previewSourceCanvas.height = Math.max(1, Math.round(h*s));
+}
+function setImageFile(file) {
+  if (!file || !file.type.startsWith("image/")) return Promise.resolve(false);
+  if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
+  state.imageUrl = URL.createObjectURL(file);
+  const img = new Image();
+  const loaded = new Promise((resolve, reject) => {
+    img.onload = () => {
+      state.image = img; setParameterControlsEnabled(true);
+      state.sourceName = safeFileName(trimExtension(file.name), "SmileMatting");
+      els.fileNameInput.value = `${state.sourceName}_matte`;
+      els.imagePath.textContent = file.webkitRelativePath || file.name;
+      els.imageInfo.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
+      setCanvasSize(img.naturalWidth, img.naturalHeight);
+      sourceCtx.clearRect(0,0,img.naturalWidth,img.naturalHeight); sourceCtx.drawImage(img,0,0);
+      state.protectMask = new Uint8Array(img.naturalWidth*img.naturalHeight); state.protectCount = 0;
+      state.eraseMask = new Uint8Array(img.naturalWidth*img.naturalHeight); state.eraseCount = 0;
+      previewSourceCtx.imageSmoothingEnabled = true;
+      previewSourceCtx.clearRect(0,0,els.previewSourceCanvas.width,els.previewSourceCanvas.height);
+      previewSourceCtx.drawImage(img,0,0,els.previewSourceCanvas.width,els.previewSourceCanvas.height);
+      els.resultCanvas.classList.remove("is-hidden"); els.protectCanvas.classList.remove("hidden-canvas");
+      els.imageEmptyState.style.display = "none"; els.zoomIndicator.classList.remove("is-hidden");
+      state.history = []; state.historyIndex = -1; updateHistoryButtons();
+      fitPreviewToWindow(); scheduleProcess(); resolve(true);
+    };
+    img.onerror = () => reject(new Error(`无法读取图片：${file.name}`));
+  });
+  img.src = state.imageUrl; return loaded;
+}
+
+/* ── Zoom / Pan ── */
+function fitPreviewToWindow() {
+  if (!state.image) return;
+  const r = els.imageDropZone.getBoundingClientRect();
+  const fit = Math.min((r.width-24)/els.previewSourceCanvas.width, (r.height-24)/els.previewSourceCanvas.height, 1);
+  state.zoom = clamp(fit||1, 0.05, 8); state.panX = 0; state.panY = 0; applyPreviewZoom();
+}
+function setZoom100() { if(!state.image) return; state.zoom=1; state.panX=0; state.panY=0; applyPreviewZoom(); }
+function applyPreviewZoom() {
+  if (!state.image) return;
+  const w = `${els.previewSourceCanvas.width}px`, h = `${els.previewSourceCanvas.height}px`;
+  const t = `translate(-50%, -50%) translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+  els.resultCanvas.style.width=w; els.resultCanvas.style.height=h; els.resultCanvas.style.transform=t;
+  els.protectCanvas.style.width=w; els.protectCanvas.style.height=h; els.protectCanvas.style.transform=t;
+  els.compareCanvas.style.width=w; els.compareCanvas.style.height=h; els.compareCanvas.style.transform=t;
+  els.zoomLevel.textContent = `${Math.round(state.zoom*100)}%`;
+}
+
+/* ── Processing Pipeline ── */
+function scheduleProcess(delay = 120) {
+  state.pendingProcess = true;
+  if (state.processTimer) clearTimeout(state.processTimer);
+  state.processTimer = setTimeout(() => { state.processTimer = 0; if (state.raf) return;
+    state.raf = requestAnimationFrame(() => { state.raf = 0; processImage(); });
+  }, delay);
+}
+function processImage() {
+  if (!state.image) { clearCanvases(); return; }
+  if (state.processing) { state.pendingProcess = true; return; }
+  state.processing = true; state.pendingProcess = false;
+  els.processingIndicator.classList.remove("is-hidden");
+  setTimeout(() => {
+    try {
+      const image = makeMattedImage({ preview: true });
+      els.resultCanvas.width = image.width; els.resultCanvas.height = image.height;
+      els.protectCanvas.width = image.width; els.protectCanvas.height = image.height;
+      els.alphaCanvas.width = image.width; els.alphaCanvas.height = image.height;
+      els.compareCanvas.width = image.width; els.compareCanvas.height = image.height;
+      applyPreviewZoom();
+      state.outputImage = image; state.alphaImage = makeAlphaImage(image);
+      alphaCtx.putImageData(state.alphaImage, 0, 0);
+      drawPreview(); drawProtectOverlay();
+    } catch (e) {
+      console.error("processImage error:", e);
+    } finally {
+      state.processing = false; els.processingIndicator.classList.add("is-hidden");
+      if (state.pendingProcess) scheduleProcess(60);
+    }
+  }, 0);
+}
+function drawPreview() {
+  const w = els.resultCanvas.width, h = els.resultCanvas.height;
+  resultCtx.clearRect(0,0,w,h);
+  if (state.previewMode === "alpha") { if (state.alphaImage) resultCtx.putImageData(state.alphaImage,0,0); return; }
+  if (state.previewMode === "solid") { resultCtx.fillStyle = els.previewBgInput.value; resultCtx.fillRect(0,0,w,h); }
+  else { drawChecker(resultCtx, w, h); }
+  if (state.outputImage) drawImageData(resultCtx, state.outputImage);
+}
+function drawChecker(ctx, w, h) {
+  const s = 20;
+  for (let y=0; y<h; y+=s) { for (let x=0; x<w; x+=s) { ctx.fillStyle = (Math.floor(x/s)+Math.floor(y/s))%2 ? "#1e2a3f" : "#131c2e"; ctx.fillRect(x,y,s,s); } }
+}
+function drawImageData(ctx, image) {
+  const c = document.createElement("canvas"); c.width = image.width; c.height = image.height;
+  c.getContext("2d").putImageData(image, 0, 0); ctx.drawImage(c, 0, 0);
+}
+function setPreviewMode(mode) {
+  state.previewMode = mode;
+  for (const b of els.previewModeButtons) b.classList.toggle("is-active", b.dataset.previewMode === mode);
+  els.previewBgInput.classList.toggle("is-hidden", mode !== "solid");
+  els.compareCanvas.classList.toggle("hidden-canvas", mode !== "compare");
+  if (mode === "compare") { els.compareCanvas.style.clipPath = `inset(0 ${100 - state.compareSplit*100}% 0 0)`; }
+  drawPreview();
+}
+
+/* ═══ Matting Core Algorithm ═══ */
+function makeMattedImage(opt = {}) {
+  const srcCanvas = opt.preview ? els.previewSourceCanvas : els.sourceCanvas;
+  const srcCtx = opt.preview ? previewSourceCtx : sourceCtx;
+  const w = srcCanvas.width, h = srcCanvas.height;
+  const sourceImage = srcCtx.getImageData(0,0,w,h);
+  const image = srcCtx.getImageData(0,0,w,h);
+  const data = image.data, sourceData = sourceImage.data;
+  const o = settings();
+  const softEnd = o.tolerance + Math.max(1, o.softness);
+
+  if (o.mode === "edge-connected") {
+    removeConnectedBackground(data, w, h, o);
+    removeBackgroundFringe(data, o.bg, Math.max(0.65, o.despill));
+  } else {
+    for (let i = 0; i < data.length; i += 4) {
+      let alpha = data[i+3]; let dist = 255;
+      if (o.mode === "color") {
+        const dr = data[i]-o.bg.r, dg = data[i+1]-o.bg.g, db = data[i+2]-o.bg.b;
+        dist = Math.sqrt(dr*dr+dg*dg+db*db);
+        if (dist <= o.tolerance) alpha = 0;
+        else if (dist < softEnd) alpha = ((dist-o.tolerance)/Math.max(1,o.softness))*255;
+      } else { alpha = lumaAlpha(data, i, o); }
+      data[i+3] = alpha < o.alphaCut ? 0 : Math.round(clamp(alpha,0,255));
+      if (o.mode === "color" && data[i+3] > 0 && o.despill > 0) despillPixel(data, i, o, dist);
+    }
+  }
+  if (o.alphaGrow !== 0) morphAlpha(data, w, h, o.alphaGrow);
+  if (o.alphaFeather > 0) featherAlpha(data, w, h, o.alphaFeather);
+  if (o.edgeClean > 0) cleanEdgeColor(data, w, h, o.edgeClean);
+  if (o.transparentClean > 0) cleanTransparentPixels(data, o.alphaCut, o.transparentClean);
+  applyProtectMask(data, sourceData, w, h, opt.preview);
+  applyEraseMask(data, w, h, opt.preview);
+  return image;
+}
+
+function lumaAlpha(data, i, o) {
+  const luma = data[i]*0.2126 + data[i+1]*0.7152 + data[i+2]*0.0722;
+  const soft = Math.max(1, o.lumaSoftness);
+  const keep = o.mode === "luma-black" ? (luma-o.lumaThreshold)/soft : (255-luma-o.lumaThreshold)/soft;
+  return clamp(keep,0,1)*255;
+}
+
+function removeConnectedBackground(data, w, h, o) {
+  const pc = w*h; const visited = new Uint8Array(pc); const queue = new Int32Array(pc);
+  const cd = Math.max(0, o.tolerance);
+  let read = 0, write = 0;
+  const startTime = Date.now();
+  const MAX_PROCESS_TIME = 5000; // 最大处理时间 5 秒
+  
+  const add = (idx) => { if (visited[idx]) return; const off = idx*4;
+    if (data[off+3]===0 || backgroundDistance(data, off, o.bg) <= cd) { visited[idx]=1; queue[write++]=idx; } };
+  for (let x=0; x<w; x++) { add(x); add((h-1)*w+x); }
+  for (let y=1; y<h-1; y++) { add(y*w); add(y*w+w-1); }
+  
+  // BFS with timeout check to prevent browser freeze
+  while (read < write) {
+    if (read % 10000 === 0 && Date.now() - startTime > MAX_PROCESS_TIME) {
+      console.warn('removeConnectedBackground timeout, using fallback');
+      break;
+    }
+    const idx = queue[read++]; const x = idx%w, y = Math.floor(idx/w);
+    if (x>0) add(idx-1); if (x<w-1) add(idx+1); if (y>0) add(idx-w); if (y<h-1) add(idx+w);
+  }
+  
+  for (let idx=0; idx<pc; idx++) { if (!visited[idx]) continue; const off = idx*4;
+    const sa = data[off+3]; const dist = backgroundDistance(data, off, o.bg); let af = 0;
+    if (dist > o.tolerance) { const v = clamp((dist-o.tolerance)/Math.max(1,o.softness),0,1); af = v*v*(3-2*v); }
+    let alpha = Math.round(sa*af);
+    const x = idx%w, y = Math.floor(idx/w);
+    if (x>0 && x<w-1 && y>0 && y<h-1) { const cov = foregroundCoverage(visited, idx, w); if (cov>0) { alpha = Math.max(alpha, Math.round(sa*cov)); } }
+    data[off+3] = alpha < o.alphaCut ? 0 : alpha;
+  }
+  smoothConnectedAlpha(data, w, h, o.alphaCut);
+}
+
+function foregroundCoverage(mask, idx, w) {
+  let wt = 0;
+  if (!mask[idx-1]) wt+=2; if (!mask[idx+1]) wt+=2; if (!mask[idx-w]) wt+=2; if (!mask[idx+w]) wt+=2;
+  if (!mask[idx-w-1]) wt+=1; if (!mask[idx-w+1]) wt+=1; if (!mask[idx+w-1]) wt+=1; if (!mask[idx+w+1]) wt+=1;
+  return clamp(wt/12, 0, 1);
+}
+
+function smoothConnectedAlpha(data, w, h, alphaCut) {
+  const horiz = new Uint8ClampedArray(w*h);
+  for (let y=0; y<h; y++) { const row=y*w; horiz[row]=data[row*4+3];
+    for (let x=1; x<w-1; x++) { const idx=row+x; horiz[idx]=Math.round((data[(idx-1)*4+3]+data[idx*4+3]*2+data[(idx+1)*4+3])/4); }
+    if (w>1) horiz[row+w-1]=data[(row+w-1)*4+3];
+  }
+  for (let x=0; x<w; x++) { writeA(x, horiz[x]);
+    for (let y=1; y<h-1; y++) { const idx=y*w+x; writeA(idx, Math.round((horiz[idx-w]+horiz[idx]*2+horiz[idx+w])/4)); }
+    if (h>1) { const idx=(h-1)*w+x; writeA(idx, horiz[idx]); }
+  }
+  function writeA(idx, val) { let n = clamp((val/255-0.035)/0.93, 0, 1); n = n*n*(3-2*n); data[idx*4+3] = Math.round(n*255) < alphaCut ? 0 : Math.round(n*255); }
+}
+
+function backgroundDistance(data, off, bg) {
+  const dr=data[off]-bg.r, dg=data[off+1]-bg.g, db=data[off+2]-bg.b;
+  return Math.sqrt(dr*dr+dg*dg+db*db);
+}
+
+function removeBackgroundFringe(data, bg, strength) {
+  for (let i=0; i<data.length; i+=4) { const a=data[i+3]/255; if (a<=0.04||a>=0.98) continue;
+    const rec = clamp(strength*(1-a),0,0.92); const sa=Math.max(0.08,a);
+    data[i] = clamp(data[i]*(1-rec)+((data[i]-bg.r*(1-a))/sa)*rec, 0, 255);
+    data[i+1] = clamp(data[i+1]*(1-rec)+((data[i+1]-bg.g*(1-a))/sa)*rec, 0, 255);
+    data[i+2] = clamp(data[i+2]*(1-rec)+((data[i+2]-bg.b*(1-a))/sa)*rec, 0, 255);
+  }
+}
+
+function despillPixel(data, i, o, bgDist) {
+  const bg = o.bg;
+  const fringe = clamp(1-(bgDist-o.tolerance)/Math.max(1,o.softness*2.2),0,1);
+  const str = o.despill*fringe; if (str<=0) return;
+  if (bg.g>=bg.r && bg.g>=bg.b) { const n=Math.max(data[i],data[i+2]); if(data[i+1]>n) data[i+1]-=(data[i+1]-n)*str; return; }
+  if (bg.b>=bg.r && bg.b>=bg.g) { const n=Math.max(data[i],data[i+1]); if(data[i+2]>n) data[i+2]-=(data[i+2]-n)*str; return; }
+  const n=Math.max(data[i+1],data[i+2]); if(data[i]>n) data[i]-=(data[i]-n)*str;
+}
+
+function morphAlpha(data, w, h, amount) {
+  const r = Math.min(4, Math.abs(Math.round(amount))); if (!r) return;
+  const src = new Uint8ClampedArray(w*h); for (let i=0;i<src.length;i++) src[i]=data[i*4+3];
+  for (let y=0; y<h; y++) for (let x=0; x<w; x++) {
+    let next = amount>0?0:255;
+    for (let oy=-r; oy<=r; oy++) { const yy=y+oy; if(yy<0||yy>=h) continue;
+      for (let ox=-r; ox<=r; ox++) { const xx=x+ox; if(xx<0||xx>=w) continue; const a=src[yy*w+xx]; next=amount>0?Math.max(next,a):Math.min(next,a); } }
+    data[(y*w+x)*4+3]=next;
+  }
+}
+
+function featherAlpha(data, w, h, rv) {
+  const r = Math.min(6, Math.round(rv)); if (!r) return;
+  const src = new Uint8ClampedArray(w*h); for (let i=0;i<src.length;i++) src[i]=data[i*4+3];
+  for (let y=0; y<h; y++) for (let x=0; x<w; x++) {
+    let sum=0, cnt=0;
+    for (let oy=-r; oy<=r; oy++) { const yy=y+oy; if(yy<0||yy>=h) continue;
+      for (let ox=-r; ox<=r; ox++) { const xx=x+ox; if(xx<0||xx>=w) continue; sum+=src[yy*w+xx]; cnt++; } }
+    data[(y*w+x)*4+3]=Math.round(sum/cnt);
+  }
+}
+
+function cleanEdgeColor(data, w, h, strength) {
+  const src = new Uint8ClampedArray(data); const r = Math.max(1, Math.round(1+strength*4));
+  for (let y=0; y<h; y++) for (let x=0; x<w; x++) {
+    const idx=(y*w+x)*4; const a=src[idx+3]; if (a<=0||a>=245) continue;
+    let bi=-1, bd=Infinity;
+    for (let oy=-r; oy<=r; oy++) { const yy=y+oy; if(yy<0||yy>=h) continue;
+      for (let ox=-r; ox<=r; ox++) { const xx=x+ox; if(xx<0||xx>=w) continue; const si=(yy*w+xx)*4;
+        if (src[si+3]<235) continue; const d=ox*ox+oy*oy; if(d<bd){bd=d;bi=si;} } }
+    if (bi>=0) { const m=strength*(1-a/255); data[idx]=data[idx]*(1-m)+src[bi]*m; data[idx+1]=data[idx+1]*(1-m)+src[bi+1]*m; data[idx+2]=data[idx+2]*(1-m)+src[bi+2]*m; }
+  }
+}
+
+function cleanTransparentPixels(data, alphaCut, strength) {
+  for (let i=0; i<data.length; i+=4) { if (data[i+3]<=alphaCut) { data[i]*=1-strength; data[i+1]*=1-strength; data[i+2]*=1-strength; } }
+}
+
+function applyProtectMask(data, sourceData, w, h, preview = false) {
+  if (!state.protectMask || !state.protectCount) return;
+  for (let p=0; p<w*h; p++) { const mi = preview ? previewToSourceIndex(p, w, h) : p; if (!state.protectMask[mi]) continue;
+    const i=p*4; data[i]=sourceData[i]; data[i+1]=sourceData[i+1]; data[i+2]=sourceData[i+2]; data[i+3]=Math.max(sourceData[i+3],255); }
+}
+function applyEraseMask(data, w, h, preview = false) {
+  if (!state.eraseMask || !state.eraseCount) return;
+  for (let p=0; p<w*h; p++) { const mi = preview ? previewToSourceIndex(p, w, h) : p; if (state.eraseMask[mi]) data[p*4+3]=0; }
+}
+function previewToSourceIndex(idx, pw, ph) {
+  const x=idx%pw, y=Math.floor(idx/pw);
+  const sx=Math.min(els.sourceCanvas.width-1, Math.floor((x/pw)*els.sourceCanvas.width));
+  const sy=Math.min(els.sourceCanvas.height-1, Math.floor((y/ph)*els.sourceCanvas.height));
+  return sy*els.sourceCanvas.width+sx;
+}
+
+function drawProtectOverlay() {
+  const c = els.protectCanvas; const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.clearRect(0,0,c.width,c.height);
+  if ((!state.protectMask||!state.protectCount) && (!state.eraseMask||!state.eraseCount)) return;
+  const image = ctx.createImageData(c.width, c.height);
+  for (let p=0; p<c.width*c.height; p++) { const mi = previewToSourceIndex(p, c.width, c.height); const i=p*4;
+    if (state.eraseMask && state.eraseMask[mi]) { image.data[i]=255; image.data[i+1]=62; image.data[i+2]=91; image.data[i+3]=96; }
+    else if (state.protectMask && state.protectMask[mi]) { image.data[i]=25; image.data[i+1]=190; image.data[i+2]=255; image.data[i+3]=82; }
+  }
+  ctx.putImageData(image, 0, 0);
+}
+
+function makeAlphaImage(image) {
+  const ai = alphaCtx.createImageData(image.width, image.height);
+  for (let i=0; i<image.data.length; i+=4) { const a=image.data[i+3]; ai.data[i]=a; ai.data[i+1]=a; ai.data[i+2]=a; ai.data[i+3]=255; }
+  return ai;
+}
+function clearCanvases() { for (const c of [els.resultCanvas, els.alphaCanvas]) c.getContext("2d").clearRect(0,0,c.width,c.height); }
+
+/* ═══ Auto Matte ═══ */
+function runAutoMatte() {
+  if (!state.image) return;
+  const d = detectBorderBackground();
+  els.modeInput.value = "edge-connected"; els.bgColorInput.value = rgbToHex(d.r,d.g,d.b);
+  els.toleranceInput.value = d.tolerance; els.softnessInput.value = d.softness;
+  els.alphaCutInput.value = 2; els.alphaGrowInput.value = 0; els.alphaFeatherInput.value = 0;
+  els.despillInput.value = 80; els.edgeCleanInput.value = 20; els.transparentCleanInput.value = 100;
+  setPreviewMode("checker"); updateOutputs();
+}
+function detectBorderBackground() {
+  const w = els.sourceCanvas.width, h = els.sourceCanvas.height;
+  const data = sourceCtx.getImageData(0,0,w,h).data; let samples = [];
+  const stride = Math.max(1, Math.floor(Math.max(w,h)/512));
+  for (let x=0; x<w; x+=stride) { collect(x,0); collect(x,h-1); }
+  for (let y=stride; y<h-1; y+=stride) { collect(0,y); collect(w-1,y); }
+  if (samples.length < 8) samples = collectOpaqueBoundsSamples(data, w, h, stride);
+  if (!samples.length) return {r:0,g:0,b:0,tolerance:0,softness:0};
+  const buckets = new Map();
+  for (const s of samples) { const key = `${s.r>>4},${s.g>>4},${s.b>>4}`; const b = buckets.get(key)||{count:0,r:0,g:0,b:0,samples:[]};
+    b.count++; b.r+=s.r; b.g+=s.g; b.b+=s.b; b.samples.push(s); buckets.set(key,b); }
+  let dom = null; for (const b of buckets.values()) { if(!dom||b.count>dom.count) dom=b; }
+  if (!dom) return {r:0,g:0,b:0,tolerance:0,softness:0};
+  const r=dom.r/dom.count, g=dom.g/dom.count, b=dom.b/dom.count;
+  const dists = dom.samples.map(s=>Math.hypot(s.r-r,s.g-g,s.b-b)).sort((a,b)=>a-b);
+  const noise = dists[Math.floor(dists.length*0.9)]||0;
+  return { r:Math.round(r), g:Math.round(g), b:Math.round(b), tolerance:Math.round(clamp(noise+10,10,42)), softness:Math.round(clamp(30+noise*1.8,28,72)) };
+  function collect(x,y) { const off=(y*w+x)*4; if(data[off+3]<16) return; samples.push({r:data[off],g:data[off+1],b:data[off+2]}); }
+}
+function collectOpaqueBoundsSamples(data, w, h, stride) {
+  let minX=w,minY=h,maxX=-1,maxY=-1; const at=16;
+  for (let y=0; y<h; y++) for (let x=0; x<w; x++) { if(data[(y*w+x)*4+3]<at) continue; if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; }
+  if (maxX<minX||maxY<minY) return []; const samples=[]; const add=(x,y)=>{const o=(y*w+x)*4; if(data[o+3]<at)return; samples.push({r:data[o],g:data[o+1],b:data[o+2]}); };
+  const step=Math.max(1,stride); for(let x=minX;x<=maxX;x+=step){add(x,minY);add(x,maxY);} for(let y=minY+step;y<maxY;y+=step){add(minX,y);add(maxX,y);}
+  return samples;
+}
+
+/* ═══ Color Sampling ═══ */
+function sampleCanvasColor(event) {
+  // Ignore clicks on control elements (buttons, inputs, etc.)
+  const target = event.target;
+  if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.closest('button')) {
+    return;
+  }
+  if (!state.image || !state.sampling) return;
+  const p = eventToImagePoint(event);
+  // Click outside canvas → cancel sampling (prevents stuck state)
+  if (!p) { state.sampling = false; updateModeFields(); return; }
+  const px = sourceCtx.getImageData(p.x,p.y,1,1).data;
+  const hex = rgbToHex(px[0],px[1],px[2]);
+  els.bgColorInput.value = hex; state.sampling = false; 
+  updateOutputs();
+}
+
+/* ═══ Mask Painting ═══ */
+function eventToImagePoint(event) {
+  if (!state.image) return null;
+  const r = els.resultCanvas.getBoundingClientRect(); if (!r.width||!r.height) return null;
+  const x = Math.floor(((event.clientX-r.left)/r.width)*els.sourceCanvas.width);
+  const y = Math.floor(((event.clientY-r.top)/r.height)*els.sourceCanvas.height);
+  if (x<0||y<0||x>=els.sourceCanvas.width||y>=els.sourceCanvas.height) return null;
+  return {x,y};
+}
+function setMaskTool(tool) { setMaskToolSelection(state.maskTool === tool ? "none" : tool); }
+function setMaskToolSelection(tool) {
+  state.maskTool = ["protect","erase","magic"].includes(tool) ? tool : "none";
+  state.maskPainting = false; state.lastMaskPoint = null; state.sampling = false;
+  els.imageDropZone.classList.toggle("is-masking", state.maskTool !== "none");
+  els.imageDropZone.classList.toggle("is-magic-wand", state.maskTool === "magic");
+  els.imageDropZone.classList.toggle("is-sampling", state.sampling);
+  for (const b of els.maskToolButtons) b.classList.toggle("is-active", b.dataset.maskTool === state.maskTool);
+  updateModeFields();
+}
+function ensurePaintMasks() {
+  const sz = els.sourceCanvas.width*els.sourceCanvas.height;
+  if (!state.protectMask || state.protectMask.length !== sz) { state.protectMask = new Uint8Array(sz); state.protectCount = 0; }
+  if (!state.eraseMask || state.eraseMask.length !== sz) { state.eraseMask = new Uint8Array(sz); state.eraseCount = 0; }
+}
+function paintMaskLine(point) {
+  if (!point || state.maskTool === "none") return; ensurePaintMasks();
+  const start = state.lastMaskPoint || point; const bs = Math.max(1, +els.brushSizeInput.value);
+  const dist = Math.hypot(point.x-start.x, point.y-start.y);
+  const steps = Math.max(1, Math.ceil(dist/Math.max(1,bs*0.22)));
+  for (let s=0; s<=steps; s++) { const r=s/steps; stampMaskCircle(start.x+(point.x-start.x)*r, start.y+(point.y-start.y)*r, bs/2); }
+  state.lastMaskPoint = point; scheduleProcess(35);
+}
+function stampMaskCircle(cx, cy, radius) {
+  const w=els.sourceCanvas.width, h=els.sourceCanvas.height;
+  const minX=Math.max(0,Math.floor(cx-radius)), maxX=Math.min(w-1,Math.ceil(cx+radius));
+  const minY=Math.max(0,Math.floor(cy-radius)), maxY=Math.min(h-1,Math.ceil(cy+radius)); const r2=radius*radius;
+  for (let y=minY; y<=maxY; y++) for (let x=minX; x<=maxX; x++) { const dx=x-cx, dy=y-cy; if(dx*dx+dy*dy>r2) continue; const idx=y*w+x;
+    if (state.maskTool==="protect") { if(!state.protectMask[idx]) state.protectCount++; state.protectMask[idx]=1; if(state.eraseMask[idx]){state.eraseMask[idx]=0;state.eraseCount--;} }
+    else { if(!state.eraseMask[idx]) state.eraseCount++; state.eraseMask[idx]=1; if(state.protectMask[idx]){state.protectMask[idx]=0;state.protectCount--;} }
+  }
+}
+function clearPaintMasks() { if(!state.image) return; ensurePaintMasks(); state.protectMask.fill(0); state.eraseMask.fill(0); state.protectCount=0; state.eraseCount=0; scheduleProcess(); }
+
+/* ═══ Magic Wand ═══ */
+function connectedMagicEraseRegion(point) {
+  const w=els.sourceCanvas.width, h=els.sourceCanvas.height;
+  const source=sourceCtx.getImageData(0,0,w,h).data; const start=point.y*w+point.x; const so=start*4;
+  const sr=source[so], sg=source[so+1], sb=source[so+2]; const o=settings(); const tol=Math.max(0,o.tolerance);
+  const visited=new Uint8Array(w*h); const region=[]; const stack=[start]; visited[start]=1;
+  while (stack.length) { const idx=stack.pop(); region.push(idx); const x=idx%w, y=Math.floor(idx/w);
+    for (const next of neighborIndexes(x,y,w,h)) { if(visited[next]) continue; const off=next*4;
+      const dr=source[off]-sr, dg=source[off+1]-sg, db=source[off+2]-sb; if(Math.sqrt(dr*dr+dg*dg+db*db)>tol) continue;
+      visited[next]=1; stack.push(next); } }
+  return region;
+}
+function applyMagicWandErase(event) {
+  if (!state.image || state.sampling || state.maskTool !== "magic") return false;
+  const p = eventToImagePoint(event); if (!p) return false; ensurePaintMasks();
+  const w=els.sourceCanvas.width, h=els.sourceCanvas.height; const region = connectedMagicEraseRegion(p);
+  if (!region.length) return true;
+  for (const idx of region) { if(idx<0||idx>=w*h) continue; if(!state.eraseMask[idx]) state.eraseCount++; state.eraseMask[idx]=1;
+    if(state.protectMask[idx]){state.protectMask[idx]=0;state.protectCount=Math.max(0,state.protectCount-1);} }
+  scheduleProcess(0); return true;
+}
+
+/* ═══ Protected Component Toggle (double click) ═══ */
+function toggleProtectedComponent(event) {
+  event.preventDefault(); event.stopPropagation();
+  if (!state.image || state.sampling || state.maskTool !== "none") return;
+  const p = eventToImagePoint(event); if (!p) return;
+  const w=els.sourceCanvas.width, h=els.sourceCanvas.height; const start=p.y*w+p.x;
+  if (!state.protectMask || state.protectMask.length !== w*h) { state.protectMask=new Uint8Array(w*h); state.protectCount=0; }
+  if (state.protectMask[start]) { removeProtectedComponent(start,w,h); scheduleProcess(); return; }
+  const probe = makeMattedImage(); let region = connectedAlphaRegion(probe.data, w, h, start, Math.max(1, +els.alphaCutInput.value));
+  if (!region.length) region = connectedSourceRegion(w, h, start); if (!region.length) return;
+  for (const idx of fillRegionHoles(region, w, h)) { if(!state.protectMask[idx]) state.protectCount++; state.protectMask[idx]=1; if(state.eraseMask&&state.eraseMask[idx]){state.eraseMask[idx]=0;state.eraseCount--;} }
+  scheduleProcess();
+}
+function connectedSourceRegion(w, h, start) {
+  const source = sourceCtx.getImageData(0,0,w,h).data; const si=start*4; const sr=source[si], sg=source[si+1], sb=source[si+2];
+  const visited = new Uint8Array(w*h); const region=[]; const stack=[start]; visited[start]=1; const tol=38;
+  while (stack.length) { const idx=stack.pop(); region.push(idx); const x=idx%w, y=Math.floor(idx/w);
+    for (const next of neighborIndexes(x,y,w,h)) { if(visited[next]) continue; const i=next*4;
+      const dr=source[i]-sr, dg=source[i+1]-sg, db=source[i+2]-sb; if(Math.sqrt(dr*dr+dg*dg+db*db)>tol) continue; visited[next]=1; stack.push(next); } }
+  return region.length >= 2 ? region : [];
+}
+function removeProtectedComponent(start, w, h) {
+  const stack=[start]; state.protectMask[start]=0; state.protectCount=Math.max(0,state.protectCount-1);
+  while (stack.length) { const idx=stack.pop(); const x=idx%w, y=Math.floor(idx/w);
+    for (const next of neighborIndexes(x,y,w,h)) { if(!state.protectMask[next]) continue; state.protectMask[next]=0; state.protectCount=Math.max(0,state.protectCount-1); stack.push(next); } }
+}
+function connectedAlphaRegion(data, w, h, start, alphaCut) {
+  if (data[start*4+3] <= alphaCut) return []; const visited=new Uint8Array(w*h); const region=[]; const stack=[start]; visited[start]=1;
+  while (stack.length) { const idx=stack.pop(); region.push(idx); const x=idx%w, y=Math.floor(idx/w);
+    for (const next of neighborIndexes(x,y,w,h)) { if(visited[next]||data[next*4+3]<=alphaCut) continue; visited[next]=1; stack.push(next); } }
+  return region;
+}
+function fillRegionHoles(region, w, h) {
+  const inRegion=new Uint8Array(w*h); let minX=w,minY=h,maxX=0,maxY=0;
+  for (const idx of region) { inRegion[idx]=1; const x=idx%w,y=Math.floor(idx/w); if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; }
+  minX=Math.max(0,minX-1); minY=Math.max(0,minY-1); maxX=Math.min(w-1,maxX+1); maxY=Math.min(h-1,maxY+1);
+  const outside=new Uint8Array(w*h); const stack=[];
+  for (let x=minX;x<=maxX;x++){sb(x,minY);sb(x,maxY);} for (let y=minY;y<=maxY;y++){sb(minX,y);sb(maxX,y);}
+  function sb(x,y){const idx=y*w+x; if(inRegion[idx]||outside[idx]) return; outside[idx]=1; stack.push(idx);}
+  while (stack.length) { const idx=stack.pop(); const x=idx%w,y=Math.floor(idx/w);
+    for (const next of neighborIndexes(x,y,w,h)) { const nx=next%w,ny=Math.floor(next/w); if(nx<minX||nx>maxX||ny<minY||ny>maxY) continue; if(inRegion[next]||outside[next]) continue; outside[next]=1; stack.push(next); } }
+  const filled=region.slice(); for (let y=minY;y<=maxY;y++) for (let x=minX;x<=maxX;x++) { const idx=y*w+x; if(!inRegion[idx]&&!outside[idx]) filled.push(idx); }
+  return filled;
+}
+function neighborIndexes(x, y, w, h) { const a=[]; if(x>0)a.push(y*w+x-1); if(x<w-1)a.push(y*w+x+1); if(y>0)a.push((y-1)*w+x); if(y<h-1)a.push((y+1)*w+x); return a; }
+
+/* ═══ Export ═══ */
+function canvasToBlob(canvas, type = "image/png", quality) { return new Promise(r => canvas.toBlob(r, type, quality)); }
+function downloadBlob(blob, filename) { const l=document.createElement("a"); l.href=URL.createObjectURL(blob); l.download=filename; l.click(); setTimeout(()=>URL.revokeObjectURL(l.href),1000); }
+async function downloadCanvas(canvas, filename) { const b = await canvasToBlob(canvas); if(!b) return; downloadBlob(b, filename); }
+
+function makeOutputCanvas() {
+  const image = makeMattedImage(); const c = document.createElement("canvas");
+  c.width = image.width; c.height = image.height; c.getContext("2d").putImageData(image, 0, 0); return c;
+}
+function makeAlphaCanvas() {
+  const image = makeAlphaImage(makeMattedImage()); const c = document.createElement("canvas");
+  c.width = image.width; c.height = image.height; c.getContext("2d").putImageData(image, 0, 0); return c;
+}
+function makeComponentCanvas(image, comp) {
+  const w = comp.maxX-comp.minX+1, h = comp.maxY-comp.minY+1; const out = new ImageData(w, h);
+  for (const si of comp.pixels) { const sx=si%image.width, sy=Math.floor(si/image.width); const so=si*4; const to=((sy-comp.minY)*w+(sx-comp.minX))*4;
+    out.data[to]=image.data[so]; out.data[to+1]=image.data[so+1]; out.data[to+2]=image.data[so+2]; out.data[to+3]=image.data[so+3]; }
+  const c = document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").putImageData(out,0,0); return c;
+}
+function findAlphaComponents(image, minAlpha = 1) {
+  const { width:w, height:h, data } = image; const visited=new Uint8Array(w*h); const comps=[];
+  for (let start=0; start<visited.length; start++) { if(visited[start]||data[start*4+3]<minAlpha) continue;
+    const stack=[start]; const pixels=[]; let minX=w,minY=h,maxX=0,maxY=0; visited[start]=1;
+    while (stack.length) { const idx=stack.pop(); pixels.push(idx); const x=idx%w,y=Math.floor(idx/w);
+      if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y;
+      if(x>0)push(idx-1); if(x<w-1)push(idx+1); if(y>0)push(idx-w); if(y<h-1)push(idx+w);
+      function push(i){if(visited[i]||data[i*4+3]<minAlpha)return; visited[i]=1; stack.push(i);} }
+    comps.push({pixels,minX,minY,maxX,maxY}); }
+  return sortComponentsForExport(comps);
+}
+function sortComponentsForExport(comps) {
+  const heights = comps.map(c=>c.maxY-c.minY+1).sort((a,b)=>a-b); const mh = heights.length?heights[Math.floor(heights.length/2)]:32;
+  const rt = Math.max(24, mh*0.9); const byY = comps.slice().sort((a,b)=>((a.minY+a.maxY)/2-(b.minY+b.maxY)/2)||(a.minX-b.minX));
+  const rows = [];
+  for (const c of byY) { const cy=(c.minY+c.maxY)/2; const row=rows.find(r=>Math.abs(cy-r.centerY)<=rt);
+    if(row){row.items.push(c); row.centerY=row.items.reduce((s,i)=>s+(i.minY+i.maxY)/2,0)/row.items.length;}
+    else{rows.push({items:[c],centerY:cy});} }
+  rows.sort((a,b)=>a.centerY-b.centerY); return rows.flatMap(r=>r.items.sort((a,b)=>(a.minX-b.minX)||(a.minY-b.minY)));
+}
+
+function exportResult() {
+  if (!state.image) return;
+  const fmt = els.exportFormatInput.value; const baseName = safeFileName(els.fileNameInput.value);
+  const canvas = makeOutputCanvas();
+  if (fmt === "jpeg") {
+    const tmp = document.createElement("canvas"); tmp.width=canvas.width; tmp.height=canvas.height;
+    const ctx = tmp.getContext("2d"); ctx.fillStyle="white"; ctx.fillRect(0,0,tmp.width,tmp.height); ctx.drawImage(canvas,0,0);
+    downloadCanvas(tmp, `${baseName}.jpg`); return;
+  }
+  if (fmt === "webp") { downloadCanvas(canvas, `${baseName}.webp`); return; }
+  downloadCanvas(canvas, `${baseName}.png`);
+}
+function exportAlpha() { if(!state.image) return; downloadCanvas(makeAlphaCanvas(), `${safeFileName(els.fileNameInput.value)}_alpha.png`); }
+
+async function exportParts() {
+  if (!state.image) return;
+  const baseName = safeFileName(els.fileNameInput.value); const orig = els.exportPartsBtn.textContent; els.exportPartsBtn.disabled = true;
+  try {
+    const image = makeMattedImage(); const minPx = Math.max(0, Math.floor(+els.partMinPixelsInput.value||0));
+    const comps = findAlphaComponents(image, 1).filter(c => c.pixels.length >= minPx);
+    if (!comps.length) { setExportPartsStatus("没有可导出的单图", orig); return; }
+    const files = [];
+    for (let i=0; i<comps.length; i++) {
+      els.exportPartsBtn.textContent = `正在打包 ${i+1}/${comps.length}`;
+      const num = String(i+1).padStart(3,"0"); const blob = await canvasToBlob(makeComponentCanvas(image, comps[i]));
+      if (blob) files.push({ path: `${baseName}/${baseName}_part_${num}.png`, blob });
+    }
+    downloadBlob(await createZipBlob(files), `${baseName}.zip`);
+    setExportPartsStatus(`已导出 ${comps.length} 张`, orig);
+  } catch (e) { console.error("Export parts failed:", e); setExportPartsStatus("导出失败", orig); }
+  finally { els.exportPartsBtn.disabled = false; }
+}
+function setExportPartsStatus(msg, restore = "导出单图") { clearTimeout(setExportPartsStatus.t); els.exportPartsBtn.textContent = msg; setExportPartsStatus.t = setTimeout(() => { els.exportPartsBtn.textContent = restore; }, 2200); }
+
+/* ═══ ZIP (minimal store, no compression) ═══ */
+async function createZipBlob(files) {
+  const enc = new TextEncoder(); const chunks=[]; const central=[]; let offset=0; const now=new Date();
+  const dt = ((now.getHours()&31)<<11)|((now.getMinutes()&63)<<5)|((Math.floor(now.getSeconds()/2))&31);
+  const dd = (((now.getFullYear()-1980)&127)<<9)|(((now.getMonth()+1)&15)<<5)|(now.getDate()&31);
+  for (const f of files) { const nb = enc.encode(f.path.replace(/\\/g,"/")); const d = new Uint8Array(await f.blob.arrayBuffer()); const crc = crc32(d);
+    const lh = new Uint8Array(30+nb.length); const lv = new DataView(lh.buffer);
+    lv.setUint32(0,0x04034b50,true); lv.setUint16(4,20,true); lv.setUint16(6,0x0800,true); lv.setUint16(8,0,true);
+    lv.setUint16(10,dt,true); lv.setUint16(12,dd,true); lv.setUint32(14,crc,true); lv.setUint32(18,d.length,true); lv.setUint32(22,d.length,true); lv.setUint16(26,nb.length,true); lh.set(nb,30);
+    chunks.push(lh, d);
+    const ch = new Uint8Array(46+nb.length); const cv = new DataView(ch.buffer);
+    cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true); cv.setUint16(6,20,true); cv.setUint16(8,0x0800,true); cv.setUint16(10,0,true);
+    cv.setUint16(12,dt,true); cv.setUint16(14,dd,true); cv.setUint32(16,crc,true); cv.setUint32(20,d.length,true); cv.setUint32(24,d.length,true); cv.setUint16(28,nb.length,true); cv.setUint32(42,offset,true); ch.set(nb,46);
+    central.push(ch); offset += lh.length + d.length;
+  }
+  const cs = central.reduce((s,c)=>s+c.length,0); const er = new Uint8Array(22); const ev = new DataView(er.buffer);
+  ev.setUint32(0,0x06054b50,true); ev.setUint16(8,files.length,true); ev.setUint16(10,files.length,true); ev.setUint32(12,cs,true); ev.setUint32(16,offset,true);
+  return new Blob([...chunks, ...central, er], { type: "application/zip" });
+}
+function crc32(data) { if(!crc32.t){crc32.t=new Uint32Array(256); for(let i=0;i<256;i++){let v=i; for(let b=0;b<8;b++) v=(v&1)?(0xedb88320^(v>>>1)):(v>>>1); crc32.t[i]=v>>>0;}} let c=0xffffffff; for(const b of data) c=crc32.t[(c^b)&0xff]^(c>>>8); return (c^0xffffffff)>>>0; }
+
+/* ═══ History (Undo/Redo) ═══ */
+function pushHistory() {
+  const snapshot = { mode: els.modeInput.value, bgColor: els.bgColorInput.value, tolerance: els.toleranceInput.value,
+    softness: els.softnessInput.value, lumaThreshold: els.lumaThresholdInput.value, lumaSoftness: els.lumaSoftnessInput.value,
+    alphaCut: els.alphaCutInput.value, alphaGrow: els.alphaGrowInput.value, alphaFeather: els.alphaFeatherInput.value,
+    despill: els.despillInput.value, edgeClean: els.edgeCleanInput.value, transparentClean: els.transparentCleanInput.value,
+    previewMode: state.previewMode };
+  if (state.historyIndex < state.history.length - 1) state.history = state.history.slice(0, state.historyIndex + 1);
+  state.history.push(snapshot); if (state.history.length > 30) state.history.shift();
+  state.historyIndex = state.history.length - 1; updateHistoryButtons();
+}
+function undo() { if (state.historyIndex <= 0) return; state.historyIndex--; applyHistorySnapshot(state.history[state.historyIndex]); updateHistoryButtons(); }
+function redo() { if (state.historyIndex >= state.history.length - 1) return; state.historyIndex++; applyHistorySnapshot(state.history[state.historyIndex]); updateHistoryButtons(); }
+function applyHistorySnapshot(s) {
+  els.modeInput.value=s.mode; els.bgColorInput.value=s.bgColor; els.toleranceInput.value=s.tolerance; els.softnessInput.value=s.softness;
+  els.lumaThresholdInput.value=s.lumaThreshold; els.lumaSoftnessInput.value=s.lumaSoftness; els.alphaCutInput.value=s.alphaCut;
+  els.alphaGrowInput.value=s.alphaGrow; els.alphaFeatherInput.value=s.alphaFeather; els.despillInput.value=s.despill;
+  els.edgeCleanInput.value=s.edgeClean; els.transparentCleanInput.value=s.transparentClean; setPreviewMode(s.previewMode); updateOutputs();
+}
+function updateHistoryButtons() { els.undoBtn.disabled = state.historyIndex <= 0; els.redoBtn.disabled = state.historyIndex >= state.history.length - 1; }
+
+/* ═══ Event Listeners ═══ */
+els.imageInput.addEventListener("change", (e) => setImageFile(e.target.files[0]));
+els.imageDropZone.addEventListener("dragover", (e) => { e.preventDefault(); els.imageDropZone.classList.add("dragover"); });
+els.imageDropZone.addEventListener("dragleave", () => els.imageDropZone.classList.remove("dragover"));
+els.imageDropZone.addEventListener("drop", (e) => { e.preventDefault(); els.imageDropZone.classList.remove("dragover"); setImageFile(e.dataTransfer.files[0]); });
+// Bind sampling to dropZone (not just canvas) so clicks outside canvas also cancel sampling
+els.imageDropZone.addEventListener("click", sampleCanvasColor);
+els.resultCanvas.addEventListener("dblclick", toggleProtectedComponent);
+els.imageDropZone.addEventListener("dblclick", toggleProtectedComponent);
+els.imageDropZone.addEventListener("wheel", (e) => { if(!state.image) return; e.preventDefault();
+  state.zoom = clamp(state.zoom * (e.deltaY > 0 ? 0.88 : 1.12), 0.05, 8); applyPreviewZoom(); }, { passive: false });
+els.imageDropZone.addEventListener("pointerdown", (e) => {
+  if (!state.image || state.sampling || e.detail >= 2) return;
+  if (state.maskTool === "magic") { e.preventDefault(); applyMagicWandErase(e); return; }
+  if (state.maskTool !== "none") { e.preventDefault(); state.maskPainting = true; state.lastMaskPoint = null;
+    els.imageDropZone.setPointerCapture(e.pointerId); paintMaskLine(eventToImagePoint(e)); return; }
+  // Compare mode slider drag
+  if (state.previewMode === "compare") { const r = els.resultCanvas.getBoundingClientRect();
+    if (Math.abs(e.clientX - (r.left + r.width * state.compareSplit)) < 20) { state.compareDragging = true; els.imageDropZone.setPointerCapture(e.pointerId); return; } }
+  state.dragging = true; state.dragMoved = false; state.dragStart = { x: e.clientX, y: e.clientY, panX: state.panX, panY: state.panY };
+  els.imageDropZone.setPointerCapture(e.pointerId); els.imageDropZone.classList.add("is-panning");
+});
+els.imageDropZone.addEventListener("pointermove", (e) => {
+  if (state.compareDragging) { const r = els.resultCanvas.getBoundingClientRect(); state.compareSplit = clamp((e.clientX - r.left) / r.width, 0.02, 0.98);
+    els.compareCanvas.style.clipPath = `inset(0 ${100 - state.compareSplit*100}% 0 0)`; return; }
+  if (state.maskPainting) { paintMaskLine(eventToImagePoint(e)); return; }
+  if (!state.dragging || !state.dragStart) return;
+  const dx = e.clientX - state.dragStart.x, dy = e.clientY - state.dragStart.y;
+  if (!state.dragMoved && Math.hypot(dx,dy) < 5) return; state.dragMoved = true;
+  state.panX = state.dragStart.panX + dx; state.panY = state.dragStart.panY + dy; applyPreviewZoom();
+});
+els.imageDropZone.addEventListener("pointerup", (e) => {
+  if (state.compareDragging) { state.compareDragging = false; if(els.imageDropZone.hasPointerCapture(e.pointerId)) els.imageDropZone.releasePointerCapture(e.pointerId); return; }
+  if (state.maskPainting) { state.maskPainting = false; state.lastMaskPoint = null;
+    if(els.imageDropZone.hasPointerCapture(e.pointerId)) els.imageDropZone.releasePointerCapture(e.pointerId); scheduleProcess(0); return; }
+  if (!state.dragging) return; state.dragging = false; state.dragStart = null;
+  els.imageDropZone.releasePointerCapture(e.pointerId); els.imageDropZone.classList.remove("is-panning");
+});
+els.imageDropZone.addEventListener("pointercancel", () => { state.maskPainting=false; state.lastMaskPoint=null; state.dragging=false; state.dragStart=null; state.compareDragging=false; els.imageDropZone.classList.remove("is-panning"); });
+els.sampleColorBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  if(state.maskTool!=="none") setMaskTool(state.maskTool);
+  state.sampling = !state.sampling;
+  updateModeFields();
+});
+for (const b of els.maskToolButtons) b.addEventListener("click", () => setMaskTool(b.dataset.maskTool));
+els.brushSizeInput.addEventListener("input", () => { els.brushSizeValue.textContent = els.brushSizeInput.value; });
+els.clearPaintMasksBtn.addEventListener("click", clearPaintMasks);
+els.modeInput.addEventListener("change", () => { handleModeSelection(); pushHistory(); });
+els.autoMatteBtn.addEventListener("click", () => { runAutoMatte(); pushHistory(); });
+els.savePresetBtn.addEventListener("click", saveCurrentPreset);
+els.deletePresetBtn.addEventListener("click", deleteCurrentPreset);
+els.resetBtn.addEventListener("click", () => { resetSettings(); pushHistory(); });
+els.exportBtn.addEventListener("click", exportResult);
+els.exportPartsBtn.addEventListener("click", exportParts);
+els.downloadAlphaBtn.addEventListener("click", exportAlpha);
+els.undoBtn.addEventListener("click", undo);
+els.redoBtn.addEventListener("click", redo);
+els.zoomFitBtn.addEventListener("click", fitPreviewToWindow);
+els.zoom100Btn.addEventListener("click", setZoom100);
+for (const b of els.previewModeButtons) b.addEventListener("click", () => { setPreviewMode(b.dataset.previewMode); pushHistory(); });
+
+// Slider input listeners with history push on change
+let sliderHistoryTimer = 0;
+for (const input of document.querySelectorAll("input, select")) {
+  // Skip file inputs, color picker, and other non-slider inputs
+  if (input.type === "file" || input.type === "color" || input.id === "modeInput" || input.id === "fileNameInput" || input.id === "partMinPixelsInput" || input.id === "brushSizeInput2" || input.id === "exportFormatInput" || input.id === "previewBgInput") continue;
+  input.addEventListener("input", updateOutputs);
+  input.addEventListener("change", () => { clearTimeout(sliderHistoryTimer); sliderHistoryTimer = setTimeout(pushHistory, 500); });
+}
+// Color picker separate handler - only process after dialog closes
+els.bgColorInput.addEventListener("change", () => { updateOutputs(); pushHistory(); });
+
+// Keyboard shortcuts
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" && e.target.type === "text") return;
+  if (e.target.tagName === "SELECT") return;
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === "z" || e.key === "Z") { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
+    if (e.key === "y" || e.key === "Y") { e.preventDefault(); redo(); return; }
+    return;
+  }
+  if (e.key === "Escape") {
+    if (state.sampling) { state.sampling = false; updateModeFields(); }
+    if (state.maskTool !== "none") setMaskToolSelection("none");
+    return;
+  }
+  if (!state.image) return;
+  switch (e.key) {
+    case "p": case "P": setMaskTool("protect"); break;
+    case "e": case "E": setMaskTool("erase"); break;
+    case "m": case "M": setMaskTool("magic"); break;
+    case "f": case "F": fitPreviewToWindow(); break;
+    case "1": setZoom100(); break;
+  }
+});
+
+// Window resize
+window.addEventListener("resize", () => { if (state.image) applyPreviewZoom(); });
+
+// Init
+renderPresetOptions();
+resetSettings();
+setParameterControlsEnabled(false);
+
+</script>
+</body>
+</html>

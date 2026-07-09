@@ -1,0 +1,5510 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Smile 图片压缩工具</title>
+    <style>
+
+:root {
+  color-scheme: dark;
+  --page: #07101f;
+  --panel: #10203a;
+  --panel-2: #132b4b;
+  --line: #22446d;
+  --muted: #8ea8c7;
+  --text: #edf6ff;
+  --cyan: #27b8ff;
+  --green: #18c78d;
+  --red: #ff4d65;
+  --orange: #f0a321;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(circle at top left, #10213d 0, var(--page) 42%, #050914 100%);
+  color: var(--text);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+.app-shell {
+  width: min(1420px, calc(100vw - 32px));
+  margin: 22px auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px 8px 0 0;
+  background: #101d37;
+}
+
+.brand-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.brand-avatar {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border: 1px solid #2d5b89;
+  border-radius: 8px;
+  background: #0b1628;
+}
+
+.eyebrow {
+  margin: 0 0 5px;
+  color: var(--cyan);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+h1,
+h2 {
+  margin: 0;
+}
+
+h1 {
+  font-size: 22px;
+}
+
+.version-badge {
+  margin-left: 10px;
+  color: #f6b73c;
+  font-size: 15px;
+  font-weight: 800;
+  vertical-align: 2px;
+}
+
+h2 {
+  font-size: 15px;
+}
+
+.top-actions,
+.export-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.export-actions .ghost {
+  flex: 1 1 120px;
+}
+
+.primary-file,
+.nav-link,
+button {
+  min-height: 36px;
+  border-radius: 7px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background: #1c3f69;
+  border: 1px solid #2c5c8e;
+}
+
+.primary-file {
+  background: linear-gradient(180deg, #25bdf8, #1289d4);
+  border-color: #2ed0ff;
+  font-weight: 700;
+}
+
+.nav-link {
+  text-decoration: none;
+  background: #152642;
+}
+
+.top-actions .primary-file {
+  min-width: 132px;
+  min-height: 44px;
+  padding: 0 24px;
+  font-size: 15px;
+  box-shadow: 0 0 0 1px rgba(39, 184, 255, 0.18), 0 10px 24px rgba(18, 137, 212, 0.18);
+}
+
+.top-actions .nav-link {
+  min-height: 44px;
+  padding: 0 18px;
+}
+
+.toolkit-home {
+  min-height: calc(100vh - 44px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.toolkit-panel {
+  padding: 14px;
+  border-inline: 1px solid var(--line);
+  background: #0d1a31;
+}
+
+.toolkit-table-header,
+.tool-row {
+  display: grid;
+  grid-template-columns: 64px minmax(160px, 220px) minmax(280px, 1fr) 110px 150px;
+  gap: 14px;
+  align-items: center;
+}
+
+.toolkit-table-header {
+  min-height: 38px;
+  padding: 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #24486f;
+  border-radius: 8px 8px 0 0;
+  background: #0b1628;
+}
+
+.tool-row {
+  min-height: 76px;
+  padding: 12px 14px;
+  color: var(--text);
+  text-decoration: none;
+  border-inline: 1px solid #24486f;
+  border-bottom: 1px solid #24486f;
+  background: #10203a;
+}
+
+.tool-row:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.tool-row:hover {
+  background: #132b4b;
+}
+
+.tool-open-link {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.tool-open-link:hover {
+  color: #55d6ff;
+}
+
+.tool-open-link:focus-visible,
+.tool-guide-trigger:focus-visible,
+.release-log-trigger:focus-visible,
+.modal-close:focus-visible {
+  outline: 2px solid #7bdcff;
+  outline-offset: 3px;
+}
+
+.tool-row time {
+  color: #b9d7ff;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tool-guide-trigger {
+  min-height: 0;
+  padding: 0;
+  display: block;
+  color: #b9d7ff;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.tool-guide-trigger > span {
+  display: inline-block;
+  margin-left: 8px;
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tool-guide-trigger:hover {
+  color: white;
+}
+
+.release-log-trigger {
+  min-width: 280px;
+  min-height: 52px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  border-color: #2f638f;
+  background: #0c1a30;
+  box-shadow: inset 3px 0 0 var(--cyan);
+}
+
+.release-log-trigger span {
+  font-weight: 800;
+}
+
+.release-log-trigger strong {
+  color: #f6b73c;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.release-log-trigger:hover {
+  border-color: var(--cyan);
+  background: #142b49;
+}
+
+.tool-icon {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #2ed0ff;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #1289d4;
+  font-weight: 800;
+}
+
+.toolkit-footer {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+  border: 1px solid var(--line);
+  border-radius: 0 0 8px 8px;
+  background: #101d37;
+}
+
+.support-stats {
+  position: fixed;
+  right: 18px;
+  top: 132px;
+  z-index: 20;
+  min-width: 168px;
+  padding: 12px 14px;
+  border: 1px solid #2d5b89;
+  border-radius: 8px;
+  color: #b9d7ff;
+  background: rgba(13, 28, 52, 0.94);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.support-stats strong {
+  color: #f6b73c;
+}
+
+.entry-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(5, 9, 20, 0.76);
+  backdrop-filter: blur(6px);
+}
+
+.entry-modal.is-hidden {
+  display: none;
+}
+
+.entry-modal-card {
+  width: min(460px, calc(100vw - 36px));
+  padding: 24px;
+  border: 1px solid #2d5b89;
+  border-radius: 8px;
+  background: #10203a;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.38);
+  text-align: center;
+}
+
+.entry-modal-card h2 {
+  font-size: 22px;
+}
+
+.entry-modal-card p {
+  margin: 18px 0 22px;
+  color: #d8eaff;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.entry-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.entry-modal-actions button,
+.qr-card button {
+  min-height: 42px;
+  font-weight: 800;
+}
+
+.qr-card img {
+  width: min(320px, 82vw);
+  display: block;
+  margin: 18px auto;
+  border-radius: 8px;
+}
+
+.primary-file input {
+  display: none;
+}
+
+.matting-app {
+  height: calc(100vh - 44px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.matting-app .topbar {
+  min-height: 92px;
+}
+
+.matting-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  min-height: 0;
+  height: 100%;
+  border-inline: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #0d1a31;
+}
+
+.matting-stage {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  padding: 12px;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.matting-pathbar {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border: 1px solid #24486f;
+  border-radius: 7px;
+  background: #0d1c34;
+}
+
+.matting-pathbar span,
+.matting-pathbar em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.matting-pathbar strong {
+  min-width: 120px;
+  flex: 0 1 auto;
+  max-width: min(520px, 48vw);
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.matting-toolbar-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preview-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.mask-paint-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.mask-paint-toolbar .compact-btn {
+  padding: 0 9px;
+  white-space: nowrap;
+}
+
+.mask-tool-btn.is-active {
+  border-color: #28bff2;
+  background: #12658a;
+  color: #fff;
+}
+
+.mask-tool-erase.is-active {
+  border-color: #ff657b;
+  background: #8f3041;
+}
+
+.matting-drop-zone.is-magic-wand #resultCanvas {
+  cursor: crosshair;
+}
+
+.brush-size-control {
+  min-width: 142px;
+  display: inline-grid;
+  grid-template-columns: auto 82px 28px;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.brush-size-control input {
+  width: 82px;
+  min-width: 0;
+  margin: 0;
+}
+
+.brush-size-control output {
+  color: var(--text);
+  text-align: right;
+}
+
+.preview-toolbar .compact-btn {
+  min-width: 76px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.preview-toolbar .preview-color {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  margin: 0;
+  padding: 2px;
+  flex: 0 0 auto;
+}
+
+.preview-color.is-hidden {
+  display: none;
+}
+
+.matting-drop-zone {
+  position: relative;
+  min-height: 0;
+  height: 100%;
+  padding: 10px;
+  border-radius: 7px;
+  overflow: hidden;
+  background:
+    linear-gradient(45deg, #26374f 25%, transparent 25%),
+    linear-gradient(-45deg, #26374f 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #26374f 75%),
+    linear-gradient(-45deg, transparent 75%, #26374f 75%);
+  background-color: #17253c;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+  background-size: 20px 20px;
+  outline: 1px solid #1d3b60;
+}
+
+.matting-drop-zone.is-panning #resultCanvas {
+  cursor: grabbing;
+}
+
+.matting-drop-zone.is-masking #resultCanvas {
+  cursor: crosshair;
+}
+
+.matting-drop-zone.dragover {
+  outline-color: var(--cyan);
+}
+
+#sourceCanvas,
+#resultCanvas,
+#protectCanvas,
+#alphaCanvas {
+  height: auto;
+  display: block;
+}
+
+#resultCanvas,
+#protectCanvas {
+  width: auto;
+  max-width: none;
+  max-height: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 1px solid #2d5b89;
+  border-radius: 7px;
+  cursor: grab;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+#protectCanvas {
+  pointer-events: none;
+  border-color: transparent;
+}
+
+.hidden-canvas {
+  display: none !important;
+}
+
+/* AI background removal */
+.ai-matting-app {
+  min-height: calc(100dvh - 44px);
+  display: grid;
+  grid-template-rows: auto auto minmax(480px, 1fr);
+  overflow: hidden;
+}
+
+.ai-matting-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(360px, 1.3fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-inline: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #0d1a31;
+}
+
+.ai-file-summary,
+.ai-model-summary {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ai-file-summary span,
+.ai-file-summary em,
+.ai-model-summary > span:not(.ai-backend-badge) {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.ai-file-summary strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-backend-badge {
+  padding: 4px 7px;
+  border: 1px solid #2c6e9b;
+  border-radius: 5px;
+  color: #79d5ff;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ai-progress-track {
+  min-width: 100px;
+  height: 6px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #071326;
+  outline: 1px solid #27496e;
+}
+
+.ai-progress-track span {
+  width: 0;
+  height: 100%;
+  display: block;
+  background: #29bdf2;
+  transition: width 160ms ease;
+}
+
+.ai-model-summary output {
+  width: 34px;
+  color: var(--text);
+  font-size: 12px;
+  text-align: right;
+}
+
+.ai-run-btn {
+  min-width: 132px;
+}
+
+.ai-matting-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr)) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border-inline: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #0b172b;
+}
+
+.ai-matting-controls label {
+  display: grid;
+  grid-template-columns: auto minmax(70px, 1fr) 28px;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.ai-matting-controls input {
+  min-width: 0;
+  margin: 0;
+}
+
+.ai-matting-controls output {
+  color: var(--text);
+  text-align: right;
+}
+
+.ai-matting-app button:disabled,
+.ai-matting-app input:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.ai-matting-workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 10px;
+  border-inline: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.ai-preview-panel {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 44px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #24486f;
+  border-radius: 7px;
+  background: #0d1c34;
+}
+
+.ai-preview-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
+  border-bottom: 1px solid #24486f;
+}
+
+.ai-preview-panel h2 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.ai-preview-panel header span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ai-preview-stage {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 14px;
+  background: #081426;
+}
+
+.ai-preview-stage.checker-stage {
+  background:
+    linear-gradient(45deg, #26374f 25%, transparent 25%),
+    linear-gradient(-45deg, #26374f 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #26374f 75%),
+    linear-gradient(-45deg, transparent 75%, #26374f 75%);
+  background-color: #17253c;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+  background-size: 20px 20px;
+}
+
+.ai-preview-stage.dragover {
+  outline: 2px solid var(--cyan);
+  outline-offset: -3px;
+}
+
+.ai-preview-stage canvas {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.ai-preview-stage canvas.is-hidden,
+.ai-preview-stage .empty-state.is-hidden {
+  display: none;
+}
+
+.ai-download-card {
+  width: min(520px, calc(100vw - 36px));
+  text-align: left;
+}
+
+.ai-download-card p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.ai-is-busy .ai-preview-stage canvas {
+  opacity: 0.72;
+}
+
+@media (max-width: 980px) {
+  .ai-matting-app {
+    overflow: visible;
+  }
+
+  .ai-matting-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ai-matting-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ai-file-summary,
+  .ai-model-summary {
+    grid-column: 1 / -1;
+  }
+
+  .ai-matting-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-preview-panel {
+    min-height: 480px;
+  }
+}
+
+#resultCanvas.is-hidden {
+  display: none;
+}
+
+.matting-side {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100%;
+  max-height: 100%;
+  overflow: auto;
+  padding: 12px;
+  background: var(--panel);
+}
+
+.matting-app .side-settings {
+  margin-bottom: 12px;
+}
+
+.matting-app .settings-panel {
+  padding: 12px;
+}
+
+.matting-app .matting-settings-grid {
+  gap: 4px;
+}
+
+.info-modal-card {
+  width: min(760px, calc(100vw - 36px));
+  max-height: min(780px, calc(100dvh - 40px));
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+}
+
+.info-modal-header {
+  min-height: 86px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  background: #0d1a31;
+}
+
+.info-modal-header .eyebrow {
+  margin-bottom: 5px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.info-modal-header h2 {
+  font-size: 21px;
+}
+
+.modal-close {
+  width: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+  border-radius: 6px;
+  color: #b9d7ff;
+  background: #142844;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.release-summary {
+  margin: 18px 20px 0;
+  padding: 14px 16px;
+  display: grid;
+  gap: 5px;
+  border: 1px solid #28547e;
+  border-left: 3px solid var(--cyan);
+  border-radius: 7px;
+  background: #0b1628;
+}
+
+.release-summary strong {
+  color: white;
+}
+
+.release-summary span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.version-tree {
+  max-height: calc(100dvh - 260px);
+  margin: 0;
+  padding: 18px 24px 24px 88px;
+  overflow: auto;
+  list-style: none;
+}
+
+.version-tree li {
+  position: relative;
+  min-height: 72px;
+  padding: 0 0 22px 30px;
+  border-left: 1px solid #315a80;
+}
+
+.version-tree li:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+
+.version-tree li::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: -6px;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #0d1a31;
+  border-radius: 50%;
+  background: #6c8baa;
+  box-shadow: 0 0 0 1px #315a80;
+}
+
+.version-tree li.is-feature::before {
+  background: var(--cyan);
+  box-shadow: 0 0 0 1px var(--cyan), 0 0 14px rgba(39, 184, 255, 0.35);
+}
+
+.version-tree li.is-doc::before {
+  background: #f6b73c;
+  box-shadow: 0 0 0 1px #f6b73c;
+}
+
+.version-tree li > span {
+  position: absolute;
+  top: -1px;
+  left: -76px;
+  color: #8fb1d4;
+  font: 700 11px/1.5 Consolas, monospace;
+}
+
+.version-tree li strong {
+  color: white;
+  font-size: 14px;
+}
+
+.version-tree li p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.guide-modal-body {
+  max-height: calc(100dvh - 150px);
+  padding: 20px;
+  overflow: auto;
+}
+
+.guide-steps {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  list-style: none;
+  counter-reset: guide-step;
+}
+
+.guide-steps li {
+  position: relative;
+  min-height: 92px;
+  padding: 14px 14px 14px 48px;
+  border: 1px solid #24486f;
+  border-radius: 7px;
+  background: #0d1a31;
+  counter-increment: guide-step;
+}
+
+.guide-steps li::before {
+  content: counter(guide-step, decimal-leading-zero);
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  color: var(--cyan);
+  font: 800 12px/1 Consolas, monospace;
+}
+
+.guide-steps strong {
+  color: white;
+  font-size: 13px;
+}
+
+.guide-steps p,
+.guide-note p,
+.guide-update p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.guide-note,
+.guide-update {
+  margin-top: 12px;
+  padding: 13px 15px;
+  border-left: 3px solid #4e7398;
+  border-radius: 5px;
+  background: #0b1628;
+}
+
+.guide-note strong,
+.guide-update strong {
+  color: #dcecff;
+  font-size: 12px;
+}
+
+.guide-update {
+  border-left-color: #f6b73c;
+}
+
+.guide-update strong {
+  color: #f6b73c;
+}
+
+.matting-app .project-name-field {
+  margin-top: 0;
+}
+
+.matting-app .project-name-field input {
+  height: 34px;
+}
+
+.matting-app .export-folder-wide {
+  min-height: 40px;
+}
+
+.matting-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.matting-settings-grid button {
+  width: 100%;
+}
+
+#imageInfo {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ghost {
+  background: #152642;
+}
+
+.compact-btn {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.success {
+  background: var(--green);
+  border-color: #45e2ad;
+  font-weight: 700;
+}
+
+.warning {
+  background: var(--orange);
+  border-color: #ffc266;
+  font-weight: 700;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  min-height: 640px;
+  border-inline: 1px solid var(--line);
+  background: #0d1a31;
+}
+
+.stage-panel,
+.side-panel,
+.settings-panel {
+  background: var(--panel);
+}
+
+.stage-panel {
+  padding: 14px;
+  border-right: 1px solid var(--line);
+}
+
+.drop-zone {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 530px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: black;
+  outline: 1px solid #1d3b60;
+}
+
+.main-preview-toolbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #1d3b60;
+  background: rgba(11, 22, 40, 0.94);
+}
+
+.main-preview-toolbar strong {
+  display: block;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.main-preview-toolbar #previewInfo {
+  display: block;
+  margin-top: 3px;
+}
+
+.drop-zone.dragover {
+  outline-color: var(--cyan);
+}
+
+#previewCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: black;
+  cursor: crosshair;
+}
+
+.drop-zone #mattePreviewCanvas {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  min-height: 0;
+  display: block;
+  cursor: zoom-in;
+  touch-action: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.empty-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.empty-state strong {
+  color: var(--text);
+  font-size: 20px;
+}
+
+.timeline {
+  display: grid;
+  grid-template-columns: 42px minmax(120px, 1fr) 92px;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.icon-button {
+  min-width: 42px;
+  width: 42px;
+  padding: 0;
+  border-radius: 8px;
+  background: var(--cyan);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--cyan);
+}
+
+#timeLabel {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
+}
+
+.controls-grid,
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(92px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.controls-grid {
+  grid-template-columns: repeat(6, minmax(82px, 1fr));
+  padding: 10px 12px;
+  border: 1px solid #24486f;
+  border-radius: 8px;
+  background: #0d1c34;
+}
+
+.frame-process-grid {
+  display: grid;
+  grid-template-columns: 112px 132px 112px minmax(0, 1fr);
+  gap: 8px;
+  align-items: end;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid #24486f;
+  border-radius: 8px;
+  background: #0d1c34;
+}
+
+.frame-process-grid button {
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.frame-process-grid .crop-switch {
+  min-height: 34px;
+  align-self: end;
+}
+
+label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+label.is-hidden {
+  display: none;
+}
+
+label input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]) {
+  width: 100%;
+  height: 34px;
+  margin-top: 5px;
+  border-radius: 6px;
+  border: 1px solid #24486f;
+  background: #0b1628;
+  color: var(--text);
+  padding: 0 9px;
+}
+
+.sample-control {
+  display: grid;
+  grid-template-columns: 44px minmax(64px, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.sample-control input[type="color"] {
+  width: 44px;
+  height: 34px;
+}
+
+.sample-control button {
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.sample-control button.is-active {
+  border-color: #2ed0ff;
+  color: white;
+  background: #1289d4;
+}
+
+button.is-active {
+  border-color: #2ed0ff;
+  color: white;
+  background: #1289d4;
+}
+
+select,
+input[type="number"] {
+  width: 100%;
+  height: 34px;
+  margin-top: 5px;
+  border-radius: 6px;
+  border: 1px solid #24486f;
+  background: #0b1628;
+  color: var(--text);
+  padding: 0 9px;
+}
+
+input[type="color"] {
+  width: 100%;
+  height: 34px;
+  margin-top: 5px;
+  border: 1px solid #24486f;
+  border-radius: 6px;
+  background: #0b1628;
+}
+
+output {
+  float: right;
+  color: var(--text);
+}
+
+.side-panel {
+  padding: 14px;
+}
+
+.side-panel .export-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.side-panel .export-actions button {
+  width: 100%;
+}
+
+.side-panel .export-actions .success,
+.side-panel .export-actions .warning {
+  grid-column: 1 / -1;
+  min-height: 38px;
+}
+
+.side-settings {
+  margin-bottom: 14px;
+  padding: 12px;
+}
+
+.side-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.side-settings-grid label:nth-child(-n + 3) {
+  grid-column: 1 / -1;
+}
+
+.extract-large {
+  grid-column: 1 / -1;
+  min-height: 46px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  min-height: 36px;
+}
+
+.preset-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.preset-actions .compact-btn {
+  min-width: 66px;
+  padding-inline: 9px;
+}
+
+.danger-ghost {
+  border-color: #8e3650;
+  color: #ffb5c4;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+#resultCount {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.results-list {
+  max-height: 300px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.folder-status {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.project-name-field {
+  display: block;
+  margin-top: 10px;
+}
+
+.project-name-field input {
+  width: 100%;
+  height: 36px;
+  margin-top: 5px;
+  border-radius: 6px;
+  border: 1px solid #24486f;
+  background: #0b1628;
+  color: var(--text);
+  padding: 0 9px;
+}
+
+.export-folder-wide {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 10px;
+  font-weight: 800;
+}
+
+.matte-preview {
+  margin: 0 0 14px;
+  padding: 12px;
+  border: 1px solid #284e78;
+  border-radius: 8px;
+  background: #0d1c34;
+}
+
+.results-title {
+  margin-top: 4px;
+}
+
+#previewInfo {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.float-preview-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  border-color: #ff5a75;
+  color: #ffd7de;
+  background: #d9365a;
+  font-weight: 700;
+}
+
+#mattePreviewCanvas {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: block;
+  border: 1px solid #2d5b89;
+  border-radius: 7px;
+  background:
+    linear-gradient(45deg, #d8dee9 25%, transparent 25%),
+    linear-gradient(-45deg, #d8dee9 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d8dee9 75%),
+    linear-gradient(-45deg, transparent 75%, #d8dee9 75%);
+  background-size: 18px 18px;
+  background-position: 0 0, 0 9px, 9px -9px, -9px 0;
+  background-color: #f8fafc;
+}
+
+.preview-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.result-card {
+  display: grid;
+  grid-template-columns: 24px 58px minmax(0, 1fr) 86px;
+  gap: 10px;
+  align-items: stretch;
+  min-height: 96px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #81405a;
+  border-radius: 8px;
+  background: #172f56;
+}
+
+.preview-modal {
+  position: fixed;
+  left: 28px;
+  top: 28px;
+  z-index: 50;
+  display: block;
+  width: min(980px, calc(100vw - 56px));
+  pointer-events: none;
+}
+
+.preview-modal.is-hidden {
+  display: none;
+}
+
+.preview-modal-card {
+  width: 100%;
+  max-height: calc(100vh - 56px);
+  padding: 16px;
+  border: 1px solid #3a6fa4;
+  border-radius: 8px;
+  background: #10203a;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+  pointer-events: auto;
+}
+
+.preview-modal-header {
+  cursor: move;
+  user-select: none;
+}
+
+.preview-modal .preview-bg-control,
+.preview-modal .modal-preview-checker {
+  display: none;
+}
+
+.preview-zoom-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  cursor: default;
+}
+
+.preview-bg-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #b9d7ff;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.preview-bg-control input[type="color"] {
+  width: 38px;
+  height: 34px;
+  padding: 3px;
+  border-radius: 6px;
+}
+
+.preview-zoom-controls button {
+  min-width: 42px;
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.preview-modal-info {
+  margin: -4px 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+#largePreviewCanvas {
+  display: block;
+  border: 1px solid #2d5b89;
+  border-radius: 8px;
+  background:
+    linear-gradient(45deg, #d8dee9 25%, transparent 25%),
+    linear-gradient(-45deg, #d8dee9 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d8dee9 75%),
+    linear-gradient(-45deg, transparent 75%, #d8dee9 75%);
+  background-size: 22px 22px;
+  background-position: 0 0, 0 11px, 11px -11px, -11px 0;
+  background-color: #f8fafc;
+}
+
+#largePreviewCanvas.has-solid-bg {
+  background-image: none;
+}
+
+.large-preview-viewport {
+  max-height: calc(100vh - 156px);
+  overflow: auto;
+  border-radius: 8px;
+}
+
+.result-card .adjust-frame-btn {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border-color: #ff5a75;
+  color: #ffb5c1;
+  background: #162743;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.result-card img {
+  width: 52px;
+  height: 52px;
+  align-self: center;
+  object-fit: contain;
+  background:
+    linear-gradient(45deg, #d8dee9 25%, transparent 25%),
+    linear-gradient(-45deg, #d8dee9 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d8dee9 75%),
+    linear-gradient(-45deg, transparent 75%, #d8dee9 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+  background-color: #f8fafc;
+  border-radius: 5px;
+}
+
+.result-card > input[type="checkbox"] {
+  align-self: center;
+}
+
+.result-meta {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+}
+
+.result-name-input {
+  width: 100%;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid #2f5f90;
+  background: #0b1628;
+  color: var(--text);
+  font-weight: 700;
+  padding: 0 8px;
+}
+
+.result-keywords-input {
+  width: 100%;
+  height: 28px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #274e78;
+  background: #0b1628;
+  color: var(--text);
+  padding: 0 8px;
+}
+
+.result-actions {
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.result-frame-count {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.frame-editor {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #284e78;
+  border-radius: 8px;
+  background: #0d1c34;
+}
+
+.frame-editor.is-empty {
+  display: none;
+}
+
+.frame-editor-hint {
+  margin: -4px 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#frameEditorCanvas {
+  width: 100%;
+  height: 310px;
+  display: block;
+  border: 1px solid #2d5b89;
+  border-radius: 7px;
+  cursor: move;
+  background:
+    linear-gradient(45deg, #d8dee9 25%, transparent 25%),
+    linear-gradient(-45deg, #d8dee9 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d8dee9 75%),
+    linear-gradient(-45deg, transparent 75%, #d8dee9 75%);
+  background-size: 18px 18px;
+  background-position: 0 0, 0 9px, 9px -9px, -9px 0;
+  background-color: #f8fafc;
+}
+
+#mattePreviewCanvas.has-solid-bg,
+#largePreviewCanvas.has-solid-bg {
+  background-image: none;
+}
+
+.matte-preview #previewCanvas {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  border: 1px solid #2d5b89;
+  border-radius: 7px;
+  background: black;
+  cursor: crosshair;
+}
+
+.frame-editor-layout {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) 280px;
+  gap: 12px;
+  align-items: start;
+}
+
+.frame-editor-side {
+  min-width: 0;
+}
+
+.frame-editor-controls {
+  display: grid;
+  grid-template-columns: 70px repeat(4, minmax(72px, 1fr)) 130px;
+  gap: 10px;
+  align-items: end;
+  margin: 0 0 10px;
+}
+
+.frame-strip {
+  display: grid;
+  gap: 8px;
+  max-height: 310px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+@media (max-width: 1180px) {
+  .frame-editor-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .frame-editor-controls {
+    grid-template-columns: repeat(3, minmax(96px, 1fr));
+  }
+}
+
+/* Image compression tool */
+.compress-app {
+  height: calc(100vh - 44px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.compress-workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 300px minmax(460px, 1fr) 360px;
+  border: 1px solid var(--line);
+  border-top: 0;
+  background: #0b1628;
+}
+
+.compress-queue-panel,
+.compress-settings-panel,
+.compress-preview-panel {
+  min-width: 0;
+  min-height: 0;
+}
+
+.compress-queue-panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  border-right: 1px solid var(--line);
+  background: #0d1a31;
+}
+
+.compress-panel-title,
+.compress-preview-header {
+  min-height: 68px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.compress-panel-title p,
+.compress-preview-card p,
+.compress-progress + p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.compress-panel-title > span,
+.compress-presets .section-title > span {
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.compress-drop-zone {
+  margin: 12px;
+  padding: 16px 12px;
+  display: grid;
+  gap: 5px;
+  text-align: center;
+  border: 1px dashed #2d6b9e;
+  border-radius: 8px;
+  color: #cce6ff;
+  background: #10203a;
+}
+
+.compress-drop-zone strong {
+  color: white;
+  font-size: 13px;
+}
+
+.compress-drop-zone span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.compress-drop-zone.dragover {
+  border-color: var(--cyan);
+  background: #153657;
+}
+
+.compress-queue {
+  min-height: 0;
+  overflow: auto;
+  padding: 0 10px 12px;
+}
+
+.compress-queue-empty {
+  padding: 26px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.compress-queue-item {
+  width: 100%;
+  min-height: 70px;
+  margin-top: 8px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 24px;
+  gap: 9px;
+  align-items: center;
+  text-align: left;
+  border: 1px solid #24486f;
+  background: #10203a;
+}
+
+.compress-queue-item:hover,
+.compress-queue-item.is-active {
+  border-color: var(--cyan);
+  background: #153252;
+}
+
+.compress-queue-item.is-done {
+  border-left: 3px solid var(--green);
+}
+
+.compress-queue-item img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 5px;
+  background: #07101f;
+}
+
+.compress-queue-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.compress-queue-copy strong,
+.compress-queue-copy em,
+.compress-queue-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compress-queue-copy strong {
+  color: white;
+  font-size: 12px;
+}
+
+.compress-queue-copy em,
+.compress-queue-copy small {
+  color: var(--muted);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.compress-queue-copy small {
+  color: #8fdcbe;
+}
+
+.compress-remove {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #ff9cac;
+  font-size: 18px;
+}
+
+.compress-preview-panel {
+  display: grid;
+  grid-template-rows: auto auto;
+  align-content: start;
+  --compress-preview-stage-height: clamp(320px, 38vh, 420px);
+  background: #07101f;
+}
+
+.compress-preview-header {
+  display: grid;
+  gap: 16px;
+  background: #101d37;
+}
+
+.compress-preview-title-row,
+.compress-preview-toolbar-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.compress-preview-title {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.compress-preview-header span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.compress-preview-header #compressPreviewName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compress-preview-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.compress-preview-stats span {
+  padding: 7px 9px;
+  border: 1px solid #24486f;
+  border-radius: 6px;
+  background: #0b1628;
+}
+
+.compress-preview-stats strong {
+  margin-left: 4px;
+  color: white;
+}
+
+.compress-preview-stats .saving-stat strong {
+  color: var(--green);
+}
+
+.compress-preview-grid {
+  min-height: 0;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  overflow: auto;
+  grid-row: 2;
+}
+
+.compress-preview-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.compress-preview-modes {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #24486f;
+  border-radius: 7px;
+  background: #0b1628;
+}
+
+.compress-preview-modes label {
+  min-height: 26px;
+  padding: 0 9px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 5px;
+  color: #b9d7ff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.compress-preview-modes label:has(input:checked) {
+  color: white;
+  background: #1c5c8f;
+}
+
+.compress-preview-modes input {
+  margin: 0;
+  accent-color: var(--cyan);
+}
+
+.compress-preview-bg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.compress-preview-bg select {
+  width: 88px;
+  min-height: 32px;
+}
+
+.compress-preview-bg input[type="color"] {
+  width: 34px;
+  height: 30px;
+}
+
+.compress-compare-view {
+  min-height: 0;
+  padding: 14px;
+  overflow: auto;
+  background: #07101f;
+  grid-row: 2;
+}
+
+.compress-compare-stage {
+  position: relative;
+  width: 100%;
+  height: var(--compress-preview-stage-height);
+  min-height: var(--compress-preview-stage-height);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: inherit;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.compress-compare-stage > img,
+.compress-compare-result,
+.compress-compare-result img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.compress-compare-stage > img,
+.compress-compare-result img {
+  object-fit: contain;
+  pointer-events: none;
+  transform: translate(var(--preview-pan-x, 0), var(--preview-pan-y, 0)) scale(var(--preview-scale, 1));
+  transform-origin: center;
+}
+
+.compress-compare-stage.is-panning,
+.compress-image-stage.is-panning {
+  cursor: grabbing;
+}
+
+.compress-compare-result {
+  overflow: hidden;
+  background: inherit;
+}
+
+.compress-compare-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: white;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  transform: translateX(-50%);
+  z-index: 5;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.compress-compare-divider span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  background: #1289d4;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+}
+
+.compress-compare-label {
+  position: absolute;
+  top: 12px;
+  z-index: 4;
+  padding: 5px 8px;
+  border-radius: 5px;
+  color: white;
+  background: rgba(7, 16, 31, 0.78);
+  font-size: 11px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.compress-compare-label.original-label {
+  left: 12px;
+}
+
+.compress-compare-label.result-label {
+  right: 12px;
+}
+
+.compress-compare-stage .empty-state {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+
+.preview-bg-dark {
+  background: #07101f !important;
+  background-image: none !important;
+}
+
+.preview-bg-light {
+  background: #f4f7fb !important;
+  background-image: none !important;
+}
+
+.compress-preview-card {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #10203a;
+}
+
+.compress-preview-card figcaption {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  color: #cce6ff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.compress-preview-card p {
+  min-height: 36px;
+  margin: 0;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.compress-image-stage {
+  position: relative;
+  height: var(--compress-preview-stage-height);
+  min-height: var(--compress-preview-stage-height);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #07101f;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.compress-image-stage.checkerboard {
+  background-color: #e2e8f0;
+  background-image: linear-gradient(45deg, #cbd5e1 25%, transparent 25%), linear-gradient(-45deg, #cbd5e1 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #cbd5e1 75%), linear-gradient(-45deg, transparent 75%, #cbd5e1 75%);
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-size: 16px 16px;
+}
+
+.compress-image-stage img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  transform: translate(var(--preview-pan-x, 0), var(--preview-pan-y, 0)) scale(var(--preview-scale, 1));
+  transform-origin: center;
+}
+
+.compress-image-stage .empty-state {
+  padding: 20px;
+  color: var(--muted);
+}
+
+.compress-settings-panel {
+  overflow: auto;
+  padding: 12px;
+  border-left: 1px solid var(--line);
+  background: #0d1a31;
+}
+
+.compress-settings-panel .settings-panel + .settings-panel {
+  margin-top: 12px;
+}
+
+.compress-presets {
+  display: grid;
+  gap: 8px;
+}
+
+.compress-preset {
+  min-height: 78px;
+  padding: 11px 12px;
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  text-align: left;
+  border: 1px solid #24486f;
+  background: #0b1628;
+}
+
+.compress-preset:hover,
+.compress-preset.is-active {
+  border-color: var(--cyan);
+  background: #153252;
+}
+
+.compress-preset strong {
+  color: white;
+  font-size: 13px;
+}
+
+.compress-preset span {
+  color: #b9d7ff;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.compress-preset em {
+  color: #f6b73c;
+  font-size: 10px;
+  font-style: normal;
+}
+
+.compress-options {
+  display: grid;
+  gap: 11px;
+}
+
+.compress-options > label {
+  display: grid;
+  gap: 7px;
+}
+
+.compress-simple-panel {
+  display: block;
+}
+
+.compress-simple-steps {
+  display: grid;
+  gap: 12px;
+}
+
+.compress-simple-steps .section-title > span {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.compress-simple-steps ol {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  counter-reset: compress-step;
+}
+
+.compress-simple-steps li {
+  counter-increment: compress-step;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-content: center;
+  gap: 3px 9px;
+  padding: 9px 10px;
+  border: 1px solid #24486f;
+  border-radius: 7px;
+  background: #0b1628;
+}
+
+.compress-simple-steps li::before {
+  content: counter(compress-step);
+  grid-row: 1 / 3;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  border-radius: 50%;
+  color: white;
+  background: #1289d4;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.compress-simple-steps li strong {
+  color: white;
+  font-size: 12px;
+}
+
+.compress-simple-steps li span,
+.compress-folder-status {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.compress-simple-steps > button {
+  width: 100%;
+  min-height: 44px;
+  font-weight: 800;
+}
+
+.compress-target-format {
+  display: grid;
+  gap: 7px;
+  color: #cce6ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.compress-strength-control,
+.compress-resize-control {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid #24486f;
+  border-radius: 7px;
+  color: #cce6ff;
+  background: #0b1628;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.compress-resize-control label {
+  display: grid;
+  gap: 7px;
+}
+
+.compress-strength-control > span,
+.compress-resize-control label > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.compress-strength-control output,
+.compress-resize-control output {
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.compress-strength-control input,
+.compress-resize-control input,
+.compress-resize-control select {
+  width: 100%;
+}
+
+.compress-strength-control small,
+.compress-resize-control small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.compress-format-hint {
+  margin: -5px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.compress-folder-status {
+  margin: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.compress-tip {
+  margin: 6px 2px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #b55233;
+  background: rgba(181, 82, 51, 0.10);
+  border: 1px solid rgba(181, 82, 51, 0.30);
+  border-radius: 8px;
+  padding: 6px 9px;
+}
+
+.manual-dl {
+  display: block;
+  margin-top: 6px;
+  text-align: center;
+}
+
+.manual-dl-link {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--accent, #b55233);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.manual-dl-link:hover {
+  filter: brightness(1.08);
+}
+
+.compress-simple-note {
+  display: grid;
+  gap: 8px;
+}
+
+.compress-simple-note h2 {
+  margin-bottom: 3px;
+}
+
+.compress-simple-note span {
+  position: relative;
+  padding-left: 14px;
+  color: #b9d7ff;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.compress-simple-note span::before {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cyan);
+}
+
+.compress-options > label small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.compress-range-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 52px;
+  gap: 10px;
+  align-items: center;
+}
+
+.compress-range-row output {
+  color: var(--cyan);
+  text-align: right;
+  font-weight: 800;
+}
+
+.compress-size-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.compress-size-grid label {
+  display: grid;
+  gap: 7px;
+}
+
+.compress-resize-group > p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+#percentSizeOptions > label {
+  display: grid;
+  gap: 7px;
+}
+
+.compress-check-row,
+.compress-color-row {
+  min-height: 38px;
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 10px;
+  border: 1px solid #24486f;
+  border-radius: 6px;
+  background: #0b1628;
+}
+
+.compress-check-row input {
+  order: 2;
+}
+
+.compress-color-row input {
+  width: 46px;
+  height: 28px;
+}
+
+.compress-option-note {
+  margin: 0;
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid #24486f;
+  border-radius: 6px;
+  background: #0b1628;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.compress-option-note strong {
+  color: #cce6ff;
+  font-size: 11px;
+}
+
+.compress-actions {
+  display: grid;
+  gap: 9px;
+}
+
+.compress-actions button {
+  width: 100%;
+}
+
+.compress-progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #07101f;
+}
+
+.compress-progress span {
+  width: 0;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  transition: width 160ms ease;
+}
+
+@media (max-width: 1180px) {
+  .compress-app {
+    height: auto;
+    min-height: calc(100vh - 44px);
+    overflow: visible;
+  }
+
+  .compress-workspace {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+
+  .compress-settings-panel {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .compress-simple-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .compress-settings-panel .settings-panel + .settings-panel {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .compress-workspace,
+  .compress-settings-panel,
+  .compress-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .compress-queue-panel {
+    max-height: 480px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .compress-preview-header {
+    align-items: flex-start;
+  }
+
+  .compress-preview-title-row,
+  .compress-preview-toolbar-row {
+    width: 100%;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .compress-preview-stats {
+    justify-content: flex-start;
+  }
+
+  .compress-settings-panel {
+    grid-column: auto;
+  }
+}
+
+/* Standalone frame animation editor */
+.frame-tool-app {
+  width: min(1540px, calc(100vw - 24px));
+}
+
+.frame-open-actions input[type="file"] {
+  display: none;
+}
+
+.frame-multi-file {
+  min-width: 142px;
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.frame-workspace {
+  display: grid;
+  grid-template-columns: minmax(620px, 1fr) 300px;
+  grid-template-rows: minmax(560px, calc(100vh - 250px)) auto;
+  border-inline: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #0d1a31;
+}
+
+.frame-main-panel {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(360px, 1fr) auto;
+  gap: 10px;
+  padding: 14px;
+  border-right: 1px solid var(--line);
+}
+
+.frame-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid #24486f;
+  border-radius: 8px;
+  background: #0d1c34;
+}
+
+.frame-source-settings,
+.frame-playback-settings {
+  display: flex;
+  align-items: end;
+  gap: 9px;
+}
+
+.frame-toolbar label {
+  width: 78px;
+}
+
+.frame-toolbar label input {
+  height: 34px;
+}
+
+.frame-preview-stage {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid #2d5b89;
+  border-radius: 8px;
+  background:
+    linear-gradient(45deg, #253850 25%, transparent 25%),
+    linear-gradient(-45deg, #253850 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #253850 75%),
+    linear-gradient(-45deg, transparent 75%, #253850 75%);
+  background-color: #17253c;
+  background-position: 0 0, 12px 0, 12px -12px, 0 12px;
+  background-size: 24px 24px;
+  outline: none;
+}
+
+.frame-preview-stage:focus-visible,
+.frame-preview-stage.dragover {
+  border-color: var(--cyan);
+  box-shadow: inset 0 0 0 1px var(--cyan);
+}
+
+.frame-preview-stage #previewCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+.frame-preview-stage #previewCanvas.is-dragging {
+  cursor: grabbing;
+}
+
+.frame-preview-stage .empty-state.is-hidden {
+  display: none;
+}
+
+.frame-statusbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.frame-statusbar span:first-child {
+  color: #b9d7ff;
+  font-weight: 700;
+}
+
+.frame-inspector {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 14px;
+  background: var(--panel);
+}
+
+.frame-adjust-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.frame-adjust-subtitle {
+  margin: 16px 0 10px;
+  padding-top: 12px;
+  border-top: 1px solid #284e78;
+  color: #b9d7ff;
+  font-size: 13px;
+}
+
+.frame-color-grid label:last-child {
+  grid-column: 1 / -1;
+}
+
+.frame-color-grid label {
+  min-width: 0;
+}
+
+.frame-color-grid input[type="range"] {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.frame-color-grid output {
+  min-width: 48px;
+  color: #edf6ff;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.frame-wide-button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.frame-export-panel .section-title span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.frame-align-panel .section-title span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.frame-list-panel {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 14px;
+  border-top: 1px solid var(--line);
+  background: #0d1a31;
+}
+
+.frame-list-panel .section-title {
+  margin-bottom: 10px;
+}
+
+.frame-list-panel .section-title p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#frameCount {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.frame-order-list {
+  min-height: 132px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 154px;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+}
+
+.frame-list-empty {
+  min-width: calc(100vw - 84px);
+  display: grid;
+  place-items: center;
+  border: 1px dashed #31577e;
+  border-radius: 8px;
+  color: var(--muted);
+  background: #0d1c34;
+}
+
+.frame-order-card {
+  position: relative;
+  min-width: 154px;
+  height: 126px;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 20px;
+  grid-template-rows: 72px 20px 16px;
+  gap: 3px 7px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #284e78;
+  border-radius: 8px;
+  color: var(--text);
+  background: #132746;
+  text-align: left;
+  user-select: none;
+  cursor: pointer;
+}
+
+.frame-order-card:hover {
+  border-color: #3a6fa4;
+  background: #173055;
+}
+
+.frame-order-card.is-active {
+  border-color: var(--cyan);
+  box-shadow: inset 0 0 0 1px rgba(39, 184, 255, 0.28);
+}
+
+.frame-order-card.is-dragging {
+  opacity: 0.35;
+}
+
+.frame-order-card.is-drop-target {
+  border-color: #f0a321;
+  transform: translateY(-2px);
+}
+
+.frame-order-card img {
+  width: 100%;
+  height: 72px;
+  grid-column: 2;
+  object-fit: contain;
+  border-radius: 5px;
+  background:
+    linear-gradient(45deg, #d8dee9 25%, transparent 25%),
+    linear-gradient(-45deg, #d8dee9 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d8dee9 75%),
+    linear-gradient(-45deg, transparent 75%, #d8dee9 75%);
+  background-color: #f8fafc;
+  background-position: 0 0, 6px 0, 6px -6px, 0 6px;
+  background-size: 12px 12px;
+  pointer-events: none;
+}
+
+.frame-order-number {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.frame-order-name,
+.frame-order-offset {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frame-order-name {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.frame-order-offset {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.frame-order-grip {
+  position: absolute;
+  top: 10px;
+  right: 43px;
+  color: #7290b2;
+  font-size: 15px;
+  letter-spacing: -4px;
+}
+
+.frame-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 34px;
+  min-width: 34px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+  border-color: #8f4052;
+  border-radius: 5px;
+  color: #ffb7c3;
+  background: #482033;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.frame-delete-btn:hover {
+  border-color: #ff657b;
+  color: #fff;
+  background: #8f3041;
+}
+
+@media (max-width: 1040px) {
+  .frame-workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .frame-main-panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .frame-inspector {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .frame-list-panel {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .frame-toolbar,
+  .frame-statusbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .frame-source-settings,
+  .frame-playback-settings {
+    flex-wrap: wrap;
+  }
+
+  .frame-inspector {
+    grid-template-columns: 1fr;
+  }
+}
+
+.frame-thumb {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 22px;
+  gap: 8px;
+  align-items: center;
+  min-height: 60px;
+  padding: 7px;
+  border: 1px solid #284e78;
+  border-radius: 7px;
+  background: #132746;
+  color: var(--text);
+  text-align: left;
+}
+
+.frame-keep-checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  justify-self: center;
+}
+
+.frame-thumb.is-active {
+  border-color: var(--cyan);
+  background: #17365b;
+}
+
+.frame-thumb.is-skipped {
+  opacity: 0.48;
+}
+
+.frame-thumb img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 5px;
+  background-color: #f8fafc;
+}
+
+.frame-thumb strong,
+.frame-thumb span {
+  display: block;
+}
+
+.frame-thumb span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.settings {
+  display: grid;
+  grid-template-columns: minmax(420px, 1.15fr) minmax(320px, 0.85fr);
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: #0d1a31;
+  border-radius: 8px;
+  overflow: visible;
+}
+
+.stage-panel > .settings {
+  margin-top: 12px;
+}
+
+.settings-panel {
+  padding: 14px;
+  border: 1px solid #284e78;
+  border-radius: 8px;
+  background: #10203a;
+}
+
+.settings-grid {
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 12px 14px;
+}
+
+.settings-panel:first-child .settings-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.matte-title-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.matte-title-actions .compact-btn {
+  min-width: 74px;
+}
+
+.matte-title-actions .switch {
+  flex: 0 0 auto;
+}
+
+.settings-panel:first-child .settings-grid > label {
+  min-width: 0;
+}
+
+.matte-field {
+  display: grid;
+  grid-template-rows: auto 34px;
+  align-content: end;
+  gap: 5px;
+}
+
+.matte-field .field-caption {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.matte-field > select,
+.matte-field > input[type="color"],
+.matte-field > .sample-control {
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.range-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+}
+
+.range-row input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.range-row output {
+  width: 34px;
+  float: none;
+  color: var(--text);
+  line-height: 20px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.mask-tools {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(82px, 1fr));
+  gap: 10px 8px;
+  align-items: end;
+}
+
+.tool-choice {
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 9px;
+  padding: 0 11px;
+  border: 1px solid #24486f;
+  border-radius: 7px;
+  background: #0b1628;
+}
+
+.tool-choice input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  justify-self: center;
+}
+
+.tool-choice span {
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.tool-choice:has(input:checked) {
+  border-color: var(--cyan);
+  background: #133255;
+}
+
+.tool-choice.erase span {
+  color: #ff7d90;
+}
+
+.tool-choice.protect span {
+  color: #55d6ff;
+}
+
+.mask-tools label:last-child {
+  grid-column: 1 / -1;
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid #24486f;
+  border-radius: 999px;
+  background: #0b1628;
+}
+
+#sourceVideo,
+#workCanvas,
+#cellCanvas {
+  display: none;
+}
+
+@media (max-width: 1280px) {
+  .settings {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 980px) {
+  .workspace,
+  .settings,
+  .matting-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .stage-panel,
+  .matting-stage {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .drop-zone,
+  .matting-drop-zone {
+    min-height: 0;
+  }
+
+  .matting-stage {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .controls-grid,
+  .settings-grid,
+  .frame-process-grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .settings-panel:first-child .settings-grid,
+  .mask-tools {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .topbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .release-log-trigger {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .toolkit-table-header {
+    display: none;
+  }
+
+  .tool-row {
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 10px 12px;
+  }
+
+  .tool-row .tool-guide-trigger,
+  .tool-row time,
+  .tool-row .version-badge {
+    grid-column: 2;
+  }
+
+  .toolkit-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    padding: 12px 18px;
+  }
+}
+
+@media (max-width: 620px) {
+  .guide-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .version-tree {
+    padding-left: 76px;
+  }
+
+  .info-modal-header h2 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .matting-toolbar-row,
+  .mask-paint-toolbar,
+  .preview-toolbar {
+    width: 100%;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+}
+
+.video-generator-layout {
+  display: grid;
+  grid-template-columns: minmax(440px, 0.9fr) minmax(520px, 1.1fr);
+  min-height: calc(100vh - 120px);
+  border: 1px solid var(--line);
+  border-top: 0;
+  background: #0d1a31;
+}
+
+.video-generator-form,
+.video-history-panel {
+  min-width: 0;
+  padding: 22px;
+}
+
+.video-generator-form {
+  border-right: 1px solid var(--line);
+}
+
+.video-generator-form .section-title,
+.video-history-panel .section-title {
+  min-height: 48px;
+  margin-bottom: 18px;
+}
+
+.video-generator-form .section-title > div,
+.video-history-panel .section-title > div {
+  display: grid;
+  gap: 3px;
+}
+
+.generator-status {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.generator-status[data-kind="working"] {
+  color: var(--cyan);
+}
+
+.generator-status[data-kind="success"] {
+  color: var(--green);
+}
+
+.generator-status[data-kind="error"] {
+  color: #ff8293;
+}
+
+.generator-mode-fieldset {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+
+.generator-mode-fieldset legend,
+.generator-prompt > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.generator-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.generator-mode {
+  position: relative;
+  min-height: 86px;
+  padding: 13px;
+  border: 1px solid #284e78;
+  border-radius: 8px;
+  background: #0b1628;
+  cursor: pointer;
+}
+
+.generator-mode input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.generator-mode strong,
+.generator-mode span {
+  display: block;
+}
+
+.generator-mode strong {
+  margin-bottom: 7px;
+  font-size: 14px;
+}
+
+.generator-mode span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.generator-mode:has(input:checked) {
+  border-color: var(--cyan);
+  background: #123456;
+  box-shadow: inset 0 0 0 1px rgba(39, 184, 255, 0.22);
+}
+
+.generator-prompt textarea {
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  padding: 13px;
+  border: 1px solid #284e78;
+  border-radius: 8px;
+  outline: 0;
+  color: var(--text);
+  background: #0b1628;
+  font: inherit;
+  line-height: 1.6;
+}
+
+.generator-prompt textarea:focus {
+  border-color: var(--cyan);
+}
+
+.generator-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.generator-settings-grid label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.generator-settings-grid select,
+.generator-settings-grid input[type="number"] {
+  width: 100%;
+  margin-top: 7px;
+}
+
+.generator-frame-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.generator-upload {
+  position: relative;
+  min-height: 172px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  overflow: hidden;
+  border: 1px dashed #376a9c;
+  border-radius: 8px;
+  background: #0b1628;
+  cursor: pointer;
+}
+
+.generator-upload:hover {
+  border-color: var(--cyan);
+}
+
+.generator-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.generator-upload strong {
+  font-size: 13px;
+}
+
+.upload-label {
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.generator-upload img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  object-fit: contain;
+  background: #07101f;
+}
+
+.generator-upload img.is-visible {
+  display: block;
+}
+
+.generator-note {
+  margin: 14px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.generator-submit {
+  width: 100%;
+  min-height: 46px;
+  background: linear-gradient(180deg, #24baf5, #1187d1);
+  border-color: #35ccff;
+  font-weight: 800;
+}
+
+.generator-submit:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.api-json-panel {
+  margin: 14px 0;
+  border: 1px solid #284e78;
+  border-radius: 8px;
+  background: #07101f;
+}
+
+.api-json-panel summary {
+  padding: 10px 12px;
+  color: var(--cyan);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.api-json-panel pre {
+  max-height: 240px;
+  margin: 0;
+  overflow: auto;
+  padding: 12px;
+  border-top: 1px solid #284e78;
+  color: #c8d9ec;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.video-history-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.video-history-panel .section-title > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.video-history-list {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 420px;
+  max-height: calc(100vh - 190px);
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.history-empty {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px dashed #284e78;
+  border-radius: 8px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.history-empty strong {
+  color: var(--text);
+}
+
+.video-history-card {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  min-height: 154px;
+  overflow: hidden;
+  border: 1px solid #284e78;
+  border-radius: 8px;
+  background: #10203a;
+}
+
+.history-video {
+  min-height: 154px;
+  background: #07101f;
+}
+
+.history-video video {
+  width: 100%;
+  height: 100%;
+  min-height: 154px;
+  display: block;
+  object-fit: contain;
+}
+
+.history-waiting {
+  height: 100%;
+  min-height: 154px;
+  display: grid;
+  place-content: center;
+  gap: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.history-waiting span {
+  width: 28px;
+  height: 28px;
+  justify-self: center;
+  border: 3px solid #234b75;
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: generator-spin 0.9s linear infinite;
+}
+
+.video-history-card[data-status="failed"] .history-waiting span {
+  border: 0;
+  animation: none;
+}
+
+@keyframes generator-spin {
+  to { transform: rotate(360deg); }
+}
+
+.history-card-body {
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.history-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.history-status {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border: 1px solid #315e8d;
+  border-radius: 999px;
+  color: var(--cyan);
+  font-size: 11px;
+}
+
+.video-history-card[data-status="completed"] .history-status {
+  border-color: #247c63;
+  color: var(--green);
+}
+
+.video-history-card[data-status="failed"] .history-status {
+  border-color: #8e3947;
+  color: #ff8293;
+}
+
+.history-card-body > p {
+  margin: 12px 0;
+  display: -webkit-box;
+  overflow: hidden;
+  color: #c8d9ec;
+  font-size: 13px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.history-meta,
+.history-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.history-meta span,
+.history-meta time {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.history-meta span {
+  padding-right: 8px;
+  border-right: 1px solid #284e78;
+}
+
+.history-error {
+  margin-top: 10px;
+  color: #ff8293;
+  font-size: 12px;
+}
+
+.history-response {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.history-response summary {
+  cursor: pointer;
+  color: var(--cyan);
+}
+
+.history-response pre {
+  max-height: 180px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 10px;
+  border: 1px solid #284e78;
+  border-radius: 6px;
+  background: #07101f;
+  color: #c8d9ec;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.history-actions {
+  margin-top: 12px;
+}
+
+.history-actions a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 11px;
+  border: 1px solid #2c5c8e;
+  border-radius: 6px;
+  color: var(--text);
+  background: #17365b;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.api-config-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(3, 9, 20, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.api-config-modal.is-hidden {
+  display: none;
+}
+
+.api-config-card {
+  width: min(520px, 100%);
+  padding: 22px;
+  border: 1px solid #2e628f;
+  border-radius: 14px;
+  background: #0d1a31;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+}
+
+.api-config-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.api-config-header h2 {
+  margin: 2px 0 0;
+}
+
+.api-key-field {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.api-key-field input {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #284e78;
+  border-radius: 8px;
+  outline: 0;
+  color: var(--text);
+  background: #0b1628;
+  font: inherit;
+}
+
+.api-key-field button {
+  min-height: 42px;
+}
+
+.api-key-field input:focus {
+  border-color: var(--cyan);
+}
+
+.api-config-divider {
+  height: 1px;
+  margin: 16px 0;
+  background: #284e78;
+}
+
+.api-config-actions {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (max-width: 1080px) {
+  .video-generator-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .video-generator-form {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .video-history-list {
+    max-height: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .video-generator-form,
+  .video-history-panel {
+    padding: 15px;
+  }
+
+  .generator-mode-grid,
+  .generator-settings-grid,
+  .generator-frame-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .generator-mode {
+    min-height: 70px;
+  }
+
+  .video-history-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+/* ============================================================
+   液态玻璃 (Liquid Glass) — 深色主题覆盖层
+   保留原站全部布局/功能，仅重写容器、按钮、输入、滑块、弹窗的材质外观
+   ============================================================ */
+
+/* --- 流动渐变背景 + 光斑（作为页面底层，玻璃在其上折射）--- */
+html { background: #06101f; }
+body {
+  background: transparent;
+  color: var(--text);
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 820px at 16% 10%, rgba(39,184,255,0.20), transparent 60%),
+    radial-gradient(1000px 720px at 84% 18%, rgba(24,199,141,0.15), transparent 60%),
+    radial-gradient(1100px 920px at 52% 102%, rgba(124,92,255,0.18), transparent 60%),
+    linear-gradient(135deg, #06101f, #0a1830 50%, #06101f);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 220% 220%;
+  animation: lgBody 26s ease-in-out infinite alternate;
+}
+@keyframes lgBody {
+  0%   { background-position: 0 0, 0 0, 0 0, 0% 50%; }
+  100% { background-position: 0 0, 0 0, 0 0, 100% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
+}
+
+/* --- 玻璃面板通用材质 --- */
+.topbar,
+.compress-simple-panel,
+.compress-settings-panel,
+.settings-panel,
+.compress-queue-panel,
+.compress-queue,
+.compress-queue-item,
+.compress-preview-panel,
+.compress-preview-card,
+.compress-drop-zone,
+.brand-avatar,
+.modal-card,
+.api-config-card,
+.result-card,
+.history-card-body,
+.frame-editor,
+.matting-workspace,
+.toolkit-panel {
+  background: rgba(255,255,255,0.06) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.28) inset,
+    0 -1px 0 rgba(0,0,0,0.35) inset,
+    0 12px 34px rgba(0,0,0,0.38),
+    0 2px 10px rgba(0,0,0,0.28);
+  position: relative;
+}
+
+/* 顶部高光 sheen：模拟玻璃表面反光 */
+.topbar::after,
+.compress-simple-panel::after,
+.compress-settings-panel::after,
+.settings-panel::after,
+.compress-queue-panel::after,
+.compress-preview-panel::after,
+.compress-preview-card::after,
+.compress-drop-zone::after,
+.modal-card::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 46%;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0));
+}
+
+/* topbar 与下方工作区衔接：仅顶部大圆角 */
+.topbar { border-radius: 18px 18px 0 0 !important; }
+
+/* 主工作区透明，让背景透出 */
+.compress-workspace, .app-shell { background: transparent; }
+
+/* --- 玻璃按钮 --- */
+button {
+  background: rgba(255,255,255,0.10);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  padding: 9px 16px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.22) inset,
+    0 4px 14px rgba(0,0,0,0.28);
+  transition: transform .12s ease, background .15s ease, box-shadow .15s ease;
+}
+button:hover { background: rgba(255,255,255,0.16); }
+button:active { transform: translateY(1px); }
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 危险/警告按钮：红色玻璃 */
+.warning {
+  background: rgba(255,77,101,0.18) !important;
+  border-color: rgba(255,77,101,0.5) !important;
+  color: #ffd9df !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset, 0 6px 18px rgba(255,77,101,0.25) !important;
+}
+/* 幽灵按钮：最浅玻璃 */
+.ghost {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+/* 主操作按钮：cyan 玻璃 */
+.primary-file,
+.primary {
+  background: rgba(39,184,255,0.20) !important;
+  border-color: rgba(39,184,255,0.5) !important;
+  color: #d6f3ff !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 6px 18px rgba(39,184,255,0.25) !important;
+}
+
+/* --- 玻璃输入 / 下拉 --- */
+select,
+input[type="number"],
+input[type="text"],
+input[type="color"] {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.16) !important;
+  border-radius: 10px !important;
+  color: var(--text) !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+select:focus,
+input:focus {
+  outline: none;
+  border-color: rgba(39,184,255,0.6) !important;
+  box-shadow: 0 0 0 3px rgba(39,184,255,0.18);
+}
+/* 下拉展开项：原生 popup 白底，必须用深色背景+浅色文字，否则白底浅字看不清 */
+select option,
+select optgroup {
+  background: var(--panel) !important;
+  color: var(--text) !important;
+}
+/* 复选框用 accent 着色 */
+input[type="checkbox"] { accent-color: var(--cyan); width: 16px; height: 16px; cursor: pointer; }
+
+/* --- 玻璃滑块 --- */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  outline: none;
+  border: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  border: 2px solid var(--cyan);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  border: 2px solid var(--cyan);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+
+/* --- 进度条玻璃 --- */
+.compress-progress,
+.ai-progress-track {
+  background: rgba(255,255,255,0.12) !important;
+  border-radius: 999px !important;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset;
+}
+
+/* --- 拖拽区高亮（dragover）--- */
+.compress-drop-zone.dragover,
+.compress-drop-zone.is-drop-target,
+.drop-zone.dragover {
+  border-color: var(--cyan) !important;
+  background: rgba(39,184,255,0.14) !important;
+  box-shadow:
+    0 0 0 4px rgba(39,184,255,0.20),
+    0 1px 0 rgba(255,255,255,0.28) inset !important;
+}
+
+/* --- 弹窗遮罩 + 卡片 --- */
+.modal {
+  background: rgba(5,12,24,0.55) !important;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.modal-card { border-radius: 20px !important; }
+
+/* --- 手动下载链接（兜底）--- */
+.manual-dl-link {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(39,184,255,0.18) !important;
+  border: 1px solid rgba(39,184,255,0.45) !important;
+  color: #d6f3ff !important;
+  text-decoration: none;
+}
+.manual-dl-link:hover { background: rgba(39,184,255,0.28) !important; }
+
+/* --- 标题/文字保持浅色，轻微增强可读性 --- */
+.eyebrow, .section-title, .compress-panel-title, .brand-title, .compress-preview-title {
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+
+</style>
+  </head>
+  <body>
+    <main class="app-shell compress-app">
+      <header class="topbar">
+        <div class="brand-title">
+          
+          <div>
+            
+            <h1>图片压缩工具 <span class="version-badge"></span></h1>
+          </div>
+        </div>
+        <div class="top-actions">
+          <label class="primary-file">
+            <input id="compressInput" type="file" accept=".png,.jpg,.jpeg,.webp" multiple>
+            选择多张图片
+          </label>
+          <button id="clearCompressBtn" class="ghost" type="button">清空列表</button>
+        </div>
+      </header>
+
+      <section class="compress-workspace">
+        <aside class="compress-queue-panel">
+          <div class="section-title compress-panel-title">
+            <div>
+              <h2>图片列表</h2>
+              <p id="compressQueueSummary">等待添加图片</p>
+            </div>
+            <span id="compressCount">0 张</span>
+          </div>
+          <div id="compressDropZone" class="compress-drop-zone">
+            <strong>拖入图片批量压缩</strong>
+            <span>支持 PNG、JPG、WebP，保持原格式和原尺寸</span>
+          </div>
+          <div id="compressQueue" class="compress-queue">
+            <div class="compress-queue-empty">添加图片后会显示在这里。</div>
+          </div>
+        </aside>
+
+        <section class="compress-preview-panel">
+          <div class="compress-preview-header">
+            <div class="compress-preview-title-row">
+              <div class="compress-preview-title">
+                <span>当前预览</span>
+                <strong id="compressPreviewName">未选择图片</strong>
+              </div>
+              <div class="compress-preview-modes" role="radiogroup" aria-label="预览模式">
+                <label><input type="radio" name="compressPreviewMode" value="compare" checked>同屏预览</label>
+                <label><input type="radio" name="compressPreviewMode" value="split">分屏预览</label>
+              </div>
+            </div>
+            <div class="compress-preview-toolbar-row">
+              <label class="compress-preview-bg">预览背景
+                <select id="compressPreviewBackground">
+                  <option value="checker">棋盘格</option>
+                  <option value="dark" selected>深色</option>
+                  <option value="light">浅色</option>
+                  <option value="custom">自定义</option>
+                </select>
+                <input id="compressPreviewColor" class="is-hidden" type="color" value="#1d3557" aria-label="自定义预览背景色">
+              </label>
+              <div class="compress-preview-stats">
+                <span>原图 <strong id="originalSize">--</strong></span>
+                <span>压缩后 <strong id="compressedSize">--</strong></span>
+                <span class="saving-stat">节省 <strong id="savedPercent">--</strong></span>
+              </div>
+            </div>
+          </div>
+          <div id="compressCompareView" class="compress-compare-view checkerboard">
+            <div class="compress-compare-stage">
+              <img id="compareOriginalPreview" class="is-hidden" alt="原图对比预览">
+              <div id="compareResultClip" class="compress-compare-result">
+                <img id="compareCompressedPreview" class="is-hidden" alt="压缩结果对比预览">
+              </div>
+              <div id="compareEmpty" class="empty-state">
+                <strong>选择图片并开始压缩</strong>
+                <span>压缩完成后可拖动分割线对比效果。</span>
+              </div>
+              <button id="compareDivider" class="compress-compare-divider is-hidden" type="button" aria-label="拖动对比分割线">
+                <span>↔</span>
+              </button>
+              <span class="compress-compare-label original-label">原图</span>
+              <span id="compareResultLabel" class="compress-compare-label result-label is-hidden">压缩后</span>
+            </div>
+          </div>
+          <div class="compress-preview-grid">
+            <figure class="compress-preview-card">
+              <figcaption>原图</figcaption>
+              <div class="compress-image-stage">
+                <img id="originalPreview" class="is-hidden" alt="原图预览">
+                <div id="originalEmpty" class="empty-state">
+                  <strong>尚未载入图片</strong>
+                  <span>选择或拖入图片后，可在这里对比压缩效果。</span>
+                </div>
+              </div>
+              <p id="originalInfo">--</p>
+            </figure>
+            <figure class="compress-preview-card">
+              <figcaption>压缩结果</figcaption>
+              <div class="compress-image-stage checkerboard">
+                <img id="compressedPreview" class="is-hidden" alt="压缩结果预览">
+                <div id="compressedEmpty" class="empty-state">
+                  <strong>等待压缩</strong>
+                  <span>选择预设或调整参数后点击开始压缩。</span>
+                </div>
+              </div>
+              <p id="compressedInfo">--</p>
+            </figure>
+          </div>
+        </section>
+
+        <aside class="compress-settings-panel compress-simple-panel">
+          <article class="settings-panel compress-simple-steps">
+            <div class="section-title">
+              <h2>批量压缩</h2>
+              <span>自动优化</span>
+            </div>
+            <ol>
+              <li><strong>选择图片</strong><span>支持批量选择或直接拖入。</span></li>
+              <li><strong>批量压缩</strong><span>可按比例缩小尺寸，并选择目标图片格式。</span></li>
+              <li><strong>选择目录导出</strong><span>结果直接写入新的时间戳文件夹。</span></li>
+            </ol>
+            <label class="compress-target-format">目标格式
+              <select id="compressTargetFormat">
+                <option value="original" selected>保持原格式</option>
+                <option value="image/png">PNG（透明兼容）</option>
+                <option value="image/webp">WebP（体积更小）</option>
+                <option value="image/jpeg">JPG（适合照片）</option>
+              </select>
+            </label>
+            <p id="targetFormatHint" class="compress-format-hint">保持每张图片原有格式。</p>
+            <label class="compress-strength-control">
+              <span>压缩强度 <output id="compressStrengthValue">100%</output></span>
+              <input id="compressStrength" type="range" min="0" max="100" value="100" step="1">
+              <small id="compressStrengthHint">最强压缩，使用更少颜色，体积优先。</small>
+            </label>
+            <div class="compress-resize-control">
+              <label>尺寸缩放
+                <select id="compressResizeMode">
+                  <option value="original" selected>保持原尺寸</option>
+                  <option value="percent">按百分比缩小</option>
+                  <option value="dimension">按宽高等比缩小</option>
+                </select>
+              </label>
+              <label id="compressResizePercentRow" class="is-hidden">
+                <span>缩小百分比 <output id="compressResizePercentValue">100%</output></span>
+                <input id="compressResizePercent" type="range" min="1" max="100" value="100" step="1">
+              </label>
+              <div id="compressResizeDimensionRow" class="compress-size-grid is-hidden">
+                <label>目标宽度
+                  <input id="compressResizeWidth" type="number" min="1" step="1" placeholder="自动">
+                </label>
+                <label>目标高度
+                  <input id="compressResizeHeight" type="number" min="1" step="1" placeholder="自动">
+                </label>
+              </div>
+              <small id="compressResizeHint">默认保持图片原始像素尺寸。</small>
+            </div>
+            <button id="compressAllBtn" class="success" type="button" disabled>开始批量压缩</button>
+            <div class="compress-progress" aria-label="压缩进度">
+              <span id="compressProgressBar"></span>
+            </div>
+            <p id="compressProgressText">等待添加图片</p>
+            <button id="exportFolderBtn" class="warning" type="button" disabled>选择目录并导出</button>
+            <button id="downloadZipBtn" class="success" type="button" disabled>下载 ZIP</button>
+            <p id="exportFolderStatus" class="compress-folder-status">将优先打开上次选择的路径</p>
+            <p class="compress-tip">提示：本地双击打开（地址栏 <code>file://</code> 开头）时，浏览器禁止网页写入文件夹，「选择目录并导出」会自动改为下载 ZIP；只有通过 http / localhost 打开网页，才能选文件夹直接写入。这两个按钮都需先点上方「开始批量压缩」。</p>
+            <span id="manualDownload" class="manual-dl"></span>
+          </article>
+
+          <article class="settings-panel compress-simple-note">
+            <h2>自动处理规则</h2>
+            <span>PNG 自动减少冗余颜色与透明数据。</span>
+            <span>JPG、WebP 使用高质量有损压缩。</span>
+            <span>降低压缩强度可保留更多颜色和纹理细节，但文件会更大。</span>
+            <span>尺寸缩放只会等比缩小，不会放大原图；宽度或高度填一项即可自动计算另一项。</span>
+            <span>自动移除 EXIF、GPS 和缩略图元数据。</span>
+            <span>保持原格式时，若压缩结果更大则自动保留原文件。</span>
+            <span>保持原格式时文件名、扩展名和像素尺寸不变。</span>
+            <span>转换格式时自动更换扩展名；JPG 不支持透明背景。</span>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const DIRECTORY_DB = "SmileImageCompressDirectory";
+const DIRECTORY_STORE = "handles";
+const DIRECTORY_KEY = "lastDirectory";
+
+const els = {
+  input: $("compressInput"),
+  clearBtn: $("clearCompressBtn"),
+  dropZone: $("compressDropZone"),
+  queue: $("compressQueue"),
+  count: $("compressCount"),
+  queueSummary: $("compressQueueSummary"),
+  previewName: $("compressPreviewName"),
+  originalPreview: $("originalPreview"),
+  compressedPreview: $("compressedPreview"),
+  originalEmpty: $("originalEmpty"),
+  compressedEmpty: $("compressedEmpty"),
+  originalSize: $("originalSize"),
+  compressedSize: $("compressedSize"),
+  savedPercent: $("savedPercent"),
+  originalInfo: $("originalInfo"),
+  compressedInfo: $("compressedInfo"),
+  compareView: $("compressCompareView"),
+  compareStage: document.querySelector(".compress-compare-stage"),
+  compareOriginal: $("compareOriginalPreview"),
+  compareCompressed: $("compareCompressedPreview"),
+  compareResultClip: $("compareResultClip"),
+  compareResultLabel: $("compareResultLabel"),
+  compareEmpty: $("compareEmpty"),
+  compareDivider: $("compareDivider"),
+  previewModeInputs: Array.from(document.querySelectorAll('input[name="compressPreviewMode"]')),
+  previewBackground: $("compressPreviewBackground"),
+  previewColor: $("compressPreviewColor"),
+  compressBtn: $("compressAllBtn"),
+  exportBtn: $("exportFolderBtn"),
+  zipBtn: $("downloadZipBtn"),
+  manualDl: $("manualDownload"),
+  progressBar: $("compressProgressBar"),
+  progressText: $("compressProgressText"),
+  folderStatus: $("exportFolderStatus"),
+  targetFormat: $("compressTargetFormat"),
+  targetFormatHint: $("targetFormatHint"),
+  strength: $("compressStrength"),
+  strengthValue: $("compressStrengthValue"),
+  strengthHint: $("compressStrengthHint"),
+  resizeMode: $("compressResizeMode"),
+  resizePercent: $("compressResizePercent"),
+  resizePercentValue: $("compressResizePercentValue"),
+  resizePercentRow: $("compressResizePercentRow"),
+  resizeDimensionRow: $("compressResizeDimensionRow"),
+  resizeWidth: $("compressResizeWidth"),
+  resizeHeight: $("compressResizeHeight"),
+  resizeHint: $("compressResizeHint"),
+};
+
+const state = {
+  items: [],
+  activeId: null,
+  processing: false,
+  exporting: false,
+  nextId: 1,
+  previewMode: "compare",
+  comparePosition: 50,
+  compareDragging: false,
+  previewScale: 1,
+  previewPanX: 0,
+  previewPanY: 0,
+  previewPanning: false,
+  previewPointerId: null,
+  previewLastX: 0,
+  previewLastY: 0,
+  resizeDimensionSource: "width",
+};
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes)) return "--";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
+}
+
+function activeItem() {
+  return state.items.find((item) => item.id === state.activeId) || null;
+}
+
+function activeImageSize() {
+  const item = activeItem();
+  if (!item) return null;
+  return {
+    width: item.image.naturalWidth,
+    height: item.image.naturalHeight,
+  };
+}
+
+function resizeDimensionsFor(item) {
+  const width = item.image.naturalWidth;
+  const height = item.image.naturalHeight;
+  if (els.resizeMode.value === "percent") {
+    const percent = clampNumber(els.resizePercent.value, 1, 100);
+    return {
+      width: Math.max(1, Math.round(width * percent / 100)),
+      height: Math.max(1, Math.round(height * percent / 100)),
+    };
+  }
+  if (els.resizeMode.value === "dimension") {
+    const requestedWidth = Math.floor(Number(els.resizeWidth.value) || 0);
+    const requestedHeight = Math.floor(Number(els.resizeHeight.value) || 0);
+    if (state.resizeDimensionSource === "height" && requestedHeight > 0) {
+      const targetHeight = Math.min(height, requestedHeight);
+      return {
+        width: Math.max(1, Math.round(targetHeight * width / height)),
+        height: targetHeight,
+      };
+    }
+    if (requestedWidth > 0) {
+      const targetWidth = Math.min(width, requestedWidth);
+      return {
+        width: targetWidth,
+        height: Math.max(1, Math.round(targetWidth * height / width)),
+      };
+    }
+    if (requestedHeight > 0) {
+      const targetHeight = Math.min(height, requestedHeight);
+      return {
+        width: Math.max(1, Math.round(targetHeight * width / height)),
+        height: targetHeight,
+      };
+    }
+  }
+  return { width, height };
+}
+
+function supportedOutputType(file) {
+  if (["image/png", "image/jpeg", "image/webp"].includes(file.type)) return file.type;
+  return null;
+}
+
+function selectedOutputType(file) {
+  return els.targetFormat.value === "original" ? supportedOutputType(file) : els.targetFormat.value;
+}
+
+function extensionForType(type) {
+  if (type === "image/jpeg") return ".jpg";
+  if (type === "image/webp") return ".webp";
+  return ".png";
+}
+
+function outputFileName(item, type) {
+  if (els.targetFormat.value === "original") return item.file.name;
+  const base = item.file.name.replace(/\.[^.]+$/, "") || "image";
+  return `${base}${extensionForType(type)}`;
+}
+
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("无法生成压缩图片")), type, quality);
+  });
+}
+
+function clampNumber(value, min, max) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return min;
+  return Math.max(min, Math.min(max, number));
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// 可靠下载：先尝试自动下载，再放置一个可见的手动下载链接兜底，
+// 防止某些浏览器（尤其 file:// 下）拦截自动下载导致"点了没反应"。
+function safeDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  try { a.click(); } catch (e) { /* ignore */ }
+  a.remove();
+  const host = els.manualDl;
+  if (host) {
+    host.innerHTML = "";
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.className = "manual-dl-link";
+    link.textContent = `下载未自动开始？点此手动下载 ${filename}`;
+    host.appendChild(link);
+    setTimeout(() => {
+      if (host.contains(link)) host.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 60000);
+  } else {
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+}
+
+// 统一的 ZIP 打包 + 可靠下载（供「下载 ZIP」按钮与目录导出失败回退共用）
+async function buildAndDownloadZip(reasonText) {
+  const completed = state.items.filter((item) => item.resultBlob);
+  if (!completed.length) return;
+  const folderName = timestampName();
+  els.folderStatus.textContent = `正在打包 ${completed.length} 张图片…`;
+  try {
+    const files = completed.map((item) => ({
+      path: `${folderName}/${item.outputName}`,
+      blob: item.resultBlob,
+    }));
+    const blob = await createZipBlob(files);
+    safeDownload(blob, `${folderName}.zip`);
+    for (const item of completed) item.status = "exported";
+    renderQueue();
+    els.folderStatus.textContent = (reasonText ? reasonText + "：" : "已导出 ZIP：") + `${folderName}.zip`;
+  } catch (e) {
+    els.folderStatus.textContent = `打包失败：${e && e.message ? e.message : e}`;
+  }
+}
+
+async function createZipBlob(files) {
+  const encoder = new TextEncoder();
+  const chunks = [];
+  const centralChunks = [];
+  let offset = 0;
+  const now = new Date();
+  const dosTime = ((now.getHours() & 31) << 11) | ((now.getMinutes() & 63) << 5) | (Math.floor(now.getSeconds() / 2) & 31);
+  const dosDate = (((now.getFullYear() - 1980) & 127) << 9) | (((now.getMonth() + 1) & 15) << 5) | (now.getDate() & 31);
+
+  for (const file of files) {
+    const nameBytes = encoder.encode(file.path.replace(/\\/g, "/"));
+    const data = new Uint8Array(await file.blob.arrayBuffer());
+    const crc = crc32(data);
+    const localHeader = new Uint8Array(30 + nameBytes.length);
+    const localView = new DataView(localHeader.buffer);
+    localView.setUint32(0, 0x04034b50, true);
+    localView.setUint16(4, 20, true);
+    localView.setUint16(6, 0x0800, true);
+    localView.setUint16(8, 0, true);
+    localView.setUint16(10, dosTime, true);
+    localView.setUint16(12, dosDate, true);
+    localView.setUint32(14, crc, true);
+    localView.setUint32(18, data.length, true);
+    localView.setUint32(22, data.length, true);
+    localView.setUint16(26, nameBytes.length, true);
+    localHeader.set(nameBytes, 30);
+    chunks.push(localHeader, data);
+
+    const centralHeader = new Uint8Array(46 + nameBytes.length);
+    const centralView = new DataView(centralHeader.buffer);
+    centralView.setUint32(0, 0x02014b50, true);
+    centralView.setUint16(4, 20, true);
+    centralView.setUint16(6, 20, true);
+    centralView.setUint16(8, 0x0800, true);
+    centralView.setUint16(10, 0, true);
+    centralView.setUint16(12, dosTime, true);
+    centralView.setUint16(14, dosDate, true);
+    centralView.setUint32(16, crc, true);
+    centralView.setUint32(20, data.length, true);
+    centralView.setUint32(24, data.length, true);
+    centralView.setUint16(28, nameBytes.length, true);
+    centralView.setUint32(42, offset, true);
+    centralHeader.set(nameBytes, 46);
+    centralChunks.push(centralHeader);
+    offset += localHeader.length + data.length;
+  }
+
+  const centralSize = centralChunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const endRecord = new Uint8Array(22);
+  const endView = new DataView(endRecord.buffer);
+  endView.setUint32(0, 0x06054b50, true);
+  endView.setUint16(8, files.length, true);
+  endView.setUint16(10, files.length, true);
+  endView.setUint32(12, centralSize, true);
+  endView.setUint32(16, offset, true);
+  return new Blob([...chunks, ...centralChunks, endRecord], { type: "application/zip" });
+}
+
+function crc32(data) {
+  if (!crc32.table) {
+    crc32.table = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let value = i;
+      for (let bit = 0; bit < 8; bit++) {
+        value = (value & 1) ? (0xedb88320 ^ (value >>> 1)) : (value >>> 1);
+      }
+      crc32.table[i] = value >>> 0;
+    }
+  }
+  let crc = 0xffffffff;
+  for (const byte of data) crc = crc32.table[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+async function loadImage(file) {
+  const url = URL.createObjectURL(file);
+  const image = new Image();
+  image.decoding = "async";
+  await new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = () => reject(new Error("无法读取图片"));
+    image.src = url;
+  });
+  return { image, url };
+}
+
+async function addFiles(fileList) {
+  const files = Array.from(fileList || []).filter((file) => supportedOutputType(file));
+  for (const file of files) {
+    try {
+      const loaded = await loadImage(file);
+      state.items.push({
+        id: state.nextId++,
+        file,
+        image: loaded.image,
+        sourceUrl: loaded.url,
+        resultUrl: null,
+        resultBlob: null,
+        resultWidth: null,
+        resultHeight: null,
+        outputName: file.name,
+        status: "ready",
+        error: "",
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  if (!state.activeId && state.items.length) state.activeId = state.items[0].id;
+  renderQueue();
+  updatePreview();
+  updateActions();
+}
+
+function releaseItem(item) {
+  URL.revokeObjectURL(item.sourceUrl);
+  if (item.resultUrl) URL.revokeObjectURL(item.resultUrl);
+}
+
+function removeItem(id) {
+  const index = state.items.findIndex((item) => item.id === id);
+  if (index < 0) return;
+  const [item] = state.items.splice(index, 1);
+  releaseItem(item);
+  if (state.activeId === id) state.activeId = state.items[index]?.id || state.items[index - 1]?.id || null;
+  renderQueue();
+  updatePreview();
+  updateActions();
+}
+
+function clearItems() {
+  state.items.forEach(releaseItem);
+  state.items = [];
+  state.activeId = null;
+  els.input.value = "";
+  if (els.manualDl) els.manualDl.innerHTML = "";
+  renderQueue();
+  updatePreview();
+  updateActions();
+}
+
+function statusText(item) {
+  if (item.status === "processing") return "压缩中";
+  if (item.status === "done") return `已完成 ${formatBytes(item.resultBlob.size)}`;
+  if (item.status === "error") return item.error || "处理失败";
+  if (item.status === "exported") return "已导出";
+  return "等待压缩";
+}
+
+function renderQueue() {
+  els.queue.innerHTML = "";
+  if (!state.items.length) {
+    const empty = document.createElement("div");
+    empty.className = "compress-queue-empty";
+    empty.textContent = "添加图片后会显示在这里。";
+    els.queue.append(empty);
+  }
+  for (const item of state.items) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "compress-queue-item";
+    row.classList.toggle("is-active", item.id === state.activeId);
+    row.classList.toggle("is-done", item.status === "done" || item.status === "exported");
+    row.innerHTML = `
+      <img src="${item.sourceUrl}" alt="">
+      <span class="compress-queue-copy">
+        <strong></strong>
+        <em>${item.image.naturalWidth} × ${item.image.naturalHeight} · ${formatBytes(item.file.size)}</em>
+        <small>${statusText(item)}</small>
+      </span>
+      <span class="compress-remove" title="移除">×</span>
+    `;
+    row.querySelector("strong").textContent = item.file.name;
+    row.addEventListener("click", (event) => {
+      if (event.target.closest(".compress-remove")) {
+        removeItem(item.id);
+        return;
+      }
+      state.activeId = item.id;
+      renderQueue();
+      updatePreview();
+    });
+    els.queue.append(row);
+  }
+  const originalTotal = state.items.reduce((sum, item) => sum + item.file.size, 0);
+  const completed = state.items.filter((item) => item.resultBlob);
+  const resultTotal = completed.reduce((sum, item) => sum + item.resultBlob.size, 0);
+  els.count.textContent = `${state.items.length} 张`;
+  els.queueSummary.textContent = completed.length
+    ? `${completed.length}/${state.items.length} 已完成 · ${formatBytes(originalTotal)} → ${formatBytes(resultTotal)}`
+    : state.items.length ? `原图合计 ${formatBytes(originalTotal)}` : "等待添加图片";
+}
+
+function updatePreview() {
+  const item = activeItem();
+  updateResizeControls();
+  if (!item) {
+    els.previewName.textContent = "未选择图片";
+    els.originalPreview.classList.add("is-hidden");
+    els.compressedPreview.classList.add("is-hidden");
+    els.originalEmpty.classList.remove("is-hidden");
+    els.compressedEmpty.classList.remove("is-hidden");
+    els.originalSize.textContent = "--";
+    els.compressedSize.textContent = "--";
+    els.savedPercent.textContent = "--";
+    els.originalInfo.textContent = "--";
+    els.compressedInfo.textContent = "--";
+    els.compareOriginal.classList.add("is-hidden");
+    els.compareCompressed.classList.add("is-hidden");
+    els.compareResultClip.classList.add("is-hidden");
+    els.compareResultLabel.classList.add("is-hidden");
+    els.compareDivider.classList.add("is-hidden");
+    els.compareEmpty.classList.remove("is-hidden");
+    return;
+  }
+  els.previewName.textContent = item.file.name;
+  els.originalPreview.src = item.sourceUrl;
+  els.originalPreview.classList.remove("is-hidden");
+  els.originalEmpty.classList.add("is-hidden");
+  els.originalSize.textContent = formatBytes(item.file.size);
+  els.originalInfo.textContent = `${item.image.naturalWidth} × ${item.image.naturalHeight} · ${item.file.type || "图片"}`;
+  els.compareOriginal.src = item.sourceUrl;
+  els.compareOriginal.classList.remove("is-hidden");
+  if (!item.resultBlob || !item.resultUrl) {
+    els.compressedPreview.classList.add("is-hidden");
+    els.compressedEmpty.classList.remove("is-hidden");
+    els.compressedEmpty.querySelector("strong").textContent = item.status === "processing" ? "正在压缩" : "等待压缩";
+    els.compressedSize.textContent = "--";
+    els.savedPercent.textContent = "--";
+    els.compressedInfo.textContent = item.error || "--";
+    els.compareCompressed.classList.add("is-hidden");
+    els.compareResultClip.classList.add("is-hidden");
+    els.compareResultLabel.classList.add("is-hidden");
+    els.compareDivider.classList.add("is-hidden");
+    els.compareEmpty.classList.remove("is-hidden");
+    return;
+  }
+  els.compressedPreview.src = item.resultUrl;
+  els.compressedPreview.classList.remove("is-hidden");
+  els.compressedEmpty.classList.add("is-hidden");
+  els.compressedSize.textContent = formatBytes(item.resultBlob.size);
+  const saved = item.file.size ? (1 - item.resultBlob.size / item.file.size) * 100 : 0;
+  els.savedPercent.textContent = `${Math.max(0, saved).toFixed(1)}%`;
+  els.compressedInfo.textContent = `${item.resultWidth || item.image.naturalWidth} × ${item.resultHeight || item.image.naturalHeight} · ${item.resultBlob.type}`;
+  els.compareCompressed.src = item.resultUrl;
+  els.compareCompressed.classList.remove("is-hidden");
+  els.compareResultClip.classList.remove("is-hidden");
+  els.compareResultLabel.classList.remove("is-hidden");
+  els.compareDivider.classList.remove("is-hidden");
+  els.compareEmpty.classList.add("is-hidden");
+  setComparePosition(state.comparePosition);
+}
+
+function setPreviewMode(mode) {
+  state.previewMode = mode;
+  els.compareView.classList.toggle("is-hidden", mode !== "compare");
+  document.querySelector(".compress-preview-grid").classList.toggle("is-hidden", mode !== "split");
+}
+
+function setComparePosition(position) {
+  state.comparePosition = Math.max(0, Math.min(100, position));
+  els.compareResultClip.style.clipPath = `inset(0 0 0 ${state.comparePosition}%)`;
+  els.compareDivider.style.left = `${state.comparePosition}%`;
+}
+
+function comparePositionFromEvent(event) {
+  const rect = els.compareStage.getBoundingClientRect();
+  return ((event.clientX - rect.left) / rect.width) * 100;
+}
+
+const previewStages = [els.compareStage, ...document.querySelectorAll(".compress-image-stage")];
+
+function renderPreviewTransform() {
+  for (const stage of previewStages) {
+    stage.style.setProperty("--preview-scale", state.previewScale);
+    stage.style.setProperty("--preview-pan-x", `${state.previewPanX}px`);
+    stage.style.setProperty("--preview-pan-y", `${state.previewPanY}px`);
+    stage.title = `滚轮缩放 · 拖动图片 · 当前 ${Math.round(state.previewScale * 100)}% · 双击恢复`;
+  }
+}
+
+function resetPreviewTransform() {
+  state.previewScale = 1;
+  state.previewPanX = 0;
+  state.previewPanY = 0;
+  renderPreviewTransform();
+}
+
+function enablePreviewNavigation(stage) {
+  stage.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const rect = stage.getBoundingClientRect();
+    const cursorX = event.clientX - rect.left - rect.width / 2;
+    const cursorY = event.clientY - rect.top - rect.height / 2;
+    const oldScale = state.previewScale;
+    const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+    const newScale = Math.max(0.25, Math.min(8, oldScale * factor));
+    const ratio = newScale / oldScale;
+    state.previewPanX = cursorX - (cursorX - state.previewPanX) * ratio;
+    state.previewPanY = cursorY - (cursorY - state.previewPanY) * ratio;
+    state.previewScale = newScale;
+    renderPreviewTransform();
+  }, { passive: false });
+
+  stage.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || event.target.closest(".compress-compare-divider")) return;
+    state.previewPanning = true;
+    state.previewPointerId = event.pointerId;
+    state.previewLastX = event.clientX;
+    state.previewLastY = event.clientY;
+    stage.classList.add("is-panning");
+    stage.setPointerCapture(event.pointerId);
+  });
+
+  stage.addEventListener("pointermove", (event) => {
+    if (!state.previewPanning || state.previewPointerId !== event.pointerId) return;
+    state.previewPanX += event.clientX - state.previewLastX;
+    state.previewPanY += event.clientY - state.previewLastY;
+    state.previewLastX = event.clientX;
+    state.previewLastY = event.clientY;
+    renderPreviewTransform();
+  });
+
+  function endPan(event) {
+    if (state.previewPointerId !== event.pointerId) return;
+    state.previewPanning = false;
+    state.previewPointerId = null;
+    stage.classList.remove("is-panning");
+  }
+
+  stage.addEventListener("pointerup", endPan);
+  stage.addEventListener("pointercancel", endPan);
+  stage.addEventListener("dblclick", resetPreviewTransform);
+}
+
+function applyPreviewBackground() {
+  const mode = els.previewBackground.value;
+  const targets = [
+    document.querySelector(".compress-compare-stage"),
+    els.compareResultClip,
+    ...document.querySelectorAll(".compress-image-stage"),
+  ];
+  for (const target of targets) {
+    target.classList.toggle("checkerboard", mode === "checker");
+    target.classList.toggle("preview-bg-dark", mode === "dark");
+    target.classList.toggle("preview-bg-light", mode === "light");
+    target.style.backgroundColor = mode === "custom" ? els.previewColor.value : "";
+  }
+  els.previewColor.classList.toggle("is-hidden", mode !== "custom");
+}
+
+function quantizePng(canvas, maxColors = 256, colorStep = 8, alphaStep = 17) {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  return encodeIndexedPng(imageData, maxColors, colorStep, alphaStep);
+}
+
+async function encodeTrueColorPng(canvas, colorStep = 1, alphaStep = 1) {
+  if (colorStep <= 1 && alphaStep <= 1) return canvasToBlob(canvas, "image/png");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const quantize = (value, step) => Math.min(255, Math.round(value / step) * step);
+  for (let index = 0; index < imageData.data.length; index += 4) {
+    imageData.data[index] = quantize(imageData.data[index], colorStep);
+    imageData.data[index + 1] = quantize(imageData.data[index + 1], colorStep);
+    imageData.data[index + 2] = quantize(imageData.data[index + 2], colorStep);
+    imageData.data[index + 3] = imageData.data[index + 3] <= 2 ? 0 : quantize(imageData.data[index + 3], alphaStep);
+  }
+  ctx.putImageData(imageData, 0, 0);
+  return canvasToBlob(canvas, "image/png");
+}
+
+function pngCompressionSettings(strength) {
+  if (strength <= 10) return { mode: "truecolor", colorStep: 1, alphaStep: 1 };
+  if (strength < 70) {
+    const progress = (strength - 10) / 60;
+    return {
+      mode: "truecolor",
+      colorStep: Math.max(2, Math.round(2 + progress * 10)),
+      alphaStep: Math.max(2, Math.round(2 + progress * 18)),
+    };
+  }
+  const progress = (strength - 70) / 30;
+  return {
+    mode: "indexed",
+    maxColors: Math.round(256 - progress * 128),
+    colorStep: Math.round(5 + progress * 3),
+    alphaStep: Math.round(11 + progress * 6),
+  };
+}
+
+function colorKey(r, g, b, a, colorStep = 8, alphaStep = 17) {
+  const quantize = (value, step) => Math.min(255, Math.round(value / step) * step);
+  const alpha = a <= 2 ? 0 : quantize(a, alphaStep);
+  if (alpha === 0) return 0;
+  return ((quantize(r, colorStep) << 24) | (quantize(g, colorStep) << 16) | (quantize(b, colorStep) << 8) | alpha) >>> 0;
+}
+
+function buildColorHistogram(data, colorStep, alphaStep) {
+  const histogram = new Map();
+  for (let index = 0; index < data.length; index += 4) {
+    const key = colorKey(data[index], data[index + 1], data[index + 2], data[index + 3], colorStep, alphaStep);
+    const current = histogram.get(key);
+    if (current) {
+      current.count += 1;
+      current.r += data[index];
+      current.g += data[index + 1];
+      current.b += data[index + 2];
+      current.a += data[index + 3] <= 2 ? 0 : data[index + 3];
+    } else {
+      histogram.set(key, {
+        count: 1,
+        r: data[index],
+        g: data[index + 1],
+        b: data[index + 2],
+        a: data[index + 3] <= 2 ? 0 : data[index + 3],
+      });
+    }
+  }
+  return Array.from(histogram.values()).map((entry) => ({
+    r: Math.round(entry.r / entry.count),
+    g: Math.round(entry.g / entry.count),
+    b: Math.round(entry.b / entry.count),
+    a: Math.round(entry.a / entry.count),
+    count: entry.count,
+  }));
+}
+
+function channelRange(colors, channel) {
+  let min = 255;
+  let max = 0;
+  for (const color of colors) {
+    min = Math.min(min, color[channel]);
+    max = Math.max(max, color[channel]);
+  }
+  return max - min;
+}
+
+function splitColorBox(box) {
+  const weightedRanges = {
+    r: channelRange(box.colors, "r") * 0.299,
+    g: channelRange(box.colors, "g") * 0.587,
+    b: channelRange(box.colors, "b") * 0.114,
+    a: channelRange(box.colors, "a") * 0.45,
+  };
+  const channel = Object.keys(weightedRanges).sort((a, b) => weightedRanges[b] - weightedRanges[a])[0];
+  const colors = [...box.colors].sort((a, b) => a[channel] - b[channel]);
+  const total = colors.reduce((sum, color) => sum + color.count, 0);
+  let cumulative = 0;
+  let split = 1;
+  for (; split < colors.length; split++) {
+    cumulative += colors[split - 1].count;
+    if (cumulative >= total / 2) break;
+  }
+  return [makeColorBox(colors.slice(0, split)), makeColorBox(colors.slice(split))];
+}
+
+function makeColorBox(colors) {
+  const count = colors.reduce((sum, color) => sum + color.count, 0);
+  const range = Math.max(channelRange(colors, "r"), channelRange(colors, "g"), channelRange(colors, "b"), channelRange(colors, "a"));
+  return { colors, count, score: count * Math.max(1, range) };
+}
+
+function createPalette(data, maxColors, colorStep, alphaStep) {
+  const histogram = buildColorHistogram(data, colorStep, alphaStep);
+  if (histogram.length <= maxColors) return histogram.map(({ r, g, b, a }) => ({ r, g, b, a }));
+  const boxes = [makeColorBox(histogram)];
+  while (boxes.length < maxColors) {
+    boxes.sort((a, b) => b.score - a.score);
+    const box = boxes.shift();
+    if (!box || box.colors.length < 2) {
+      if (box) boxes.push(box);
+      break;
+    }
+    boxes.push(...splitColorBox(box));
+  }
+  return boxes.map((box) => {
+    const total = box.colors.reduce((sum, color) => sum + color.count, 0);
+    return {
+      r: Math.round(box.colors.reduce((sum, color) => sum + color.r * color.count, 0) / total),
+      g: Math.round(box.colors.reduce((sum, color) => sum + color.g * color.count, 0) / total),
+      b: Math.round(box.colors.reduce((sum, color) => sum + color.b * color.count, 0) / total),
+      a: Math.round(box.colors.reduce((sum, color) => sum + color.a * color.count, 0) / total),
+    };
+  });
+}
+
+function nearestPaletteIndex(r, g, b, a, palette, cache, colorStep, alphaStep) {
+  const key = colorKey(r, g, b, a, colorStep, alphaStep);
+  if (cache.has(key)) return cache.get(key);
+  let bestIndex = 0;
+  let bestDistance = Infinity;
+  for (let index = 0; index < palette.length; index++) {
+    const color = palette[index];
+    const alphaWeight = Math.max(a, color.a) / 255;
+    const dr = (r - color.r) * 0.299 * alphaWeight;
+    const dg = (g - color.g) * 0.587 * alphaWeight;
+    const db = (b - color.b) * 0.114 * alphaWeight;
+    const da = (a - color.a) * 0.7;
+    const distance = dr * dr + dg * dg + db * db + da * da;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestIndex = index;
+    }
+  }
+  cache.set(key, bestIndex);
+  return bestIndex;
+}
+
+async function encodeIndexedPng(imageData, maxColors, colorStep, alphaStep) {
+  const palette = createPalette(imageData.data, maxColors, colorStep, alphaStep);
+  const scanlines = new Uint8Array((imageData.width + 1) * imageData.height);
+  const cache = new Map();
+  for (let y = 0; y < imageData.height; y++) {
+    const rowOffset = y * (imageData.width + 1);
+    scanlines[rowOffset] = 0;
+    for (let x = 0; x < imageData.width; x++) {
+      const pixel = (y * imageData.width + x) * 4;
+      scanlines[rowOffset + x + 1] = nearestPaletteIndex(
+        imageData.data[pixel],
+        imageData.data[pixel + 1],
+        imageData.data[pixel + 2],
+        imageData.data[pixel + 3] <= 2 ? 0 : imageData.data[pixel + 3],
+        palette,
+        cache,
+        colorStep,
+        alphaStep,
+      );
+    }
+  }
+  const compressed = await deflateBytes(scanlines);
+  const paletteBytes = new Uint8Array(palette.length * 3);
+  const alphaBytes = new Uint8Array(palette.length);
+  let lastAlpha = -1;
+  palette.forEach((color, index) => {
+    paletteBytes[index * 3] = color.r;
+    paletteBytes[index * 3 + 1] = color.g;
+    paletteBytes[index * 3 + 2] = color.b;
+    alphaBytes[index] = color.a;
+    if (color.a < 255) lastAlpha = index;
+  });
+  const chunks = [
+    pngChunk("IHDR", makeIhdr(imageData.width, imageData.height)),
+    pngChunk("PLTE", paletteBytes),
+  ];
+  if (lastAlpha >= 0) chunks.push(pngChunk("tRNS", alphaBytes.slice(0, lastAlpha + 1)));
+  chunks.push(pngChunk("IDAT", compressed), pngChunk("IEND", new Uint8Array()));
+  return new Blob([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), ...chunks], { type: "image/png" });
+}
+
+async function deflateBytes(bytes) {
+  if (!("CompressionStream" in window)) throw new Error("当前浏览器不支持 PNG8 压缩");
+  const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+function makeIhdr(width, height) {
+  const data = new Uint8Array(13);
+  const view = new DataView(data.buffer);
+  view.setUint32(0, width);
+  view.setUint32(4, height);
+  data[8] = 8;
+  data[9] = 3;
+  return data;
+}
+
+function pngChunk(type, data) {
+  const typeBytes = new TextEncoder().encode(type);
+  const chunk = new Uint8Array(12 + data.length);
+  const view = new DataView(chunk.buffer);
+  view.setUint32(0, data.length);
+  chunk.set(typeBytes, 4);
+  chunk.set(data, 8);
+  view.setUint32(8 + data.length, crc32Png(chunk.subarray(4, 8 + data.length)));
+  return chunk;
+}
+
+const pngCrcTable = (() => {
+  const table = new Uint32Array(256);
+  for (let value = 0; value < 256; value++) {
+    let crc = value;
+    for (let bit = 0; bit < 8; bit++) crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1;
+    table[value] = crc >>> 0;
+  }
+  return table;
+})();
+
+function crc32Png(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) crc = pngCrcTable[(crc ^ byte) & 255] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+async function compressItem(item) {
+  const type = selectedOutputType(item.file);
+  if (!type) throw new Error("仅支持 PNG、JPG 和 WebP");
+  const targetSize = resizeDimensionsFor(item);
+  const canvas = document.createElement("canvas");
+  canvas.width = targetSize.width;
+  canvas.height = targetSize.height;
+  const ctx = canvas.getContext("2d", { alpha: type !== "image/jpeg" });
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  if (type === "image/jpeg") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.drawImage(item.image, 0, 0, canvas.width, canvas.height);
+  const strength = Number(els.strength.value);
+  const quality = type === "image/webp" ? 0.98 - strength * 0.0016 : type === "image/jpeg" ? 0.98 - strength * 0.0012 : undefined;
+  let compressed;
+  if (type === "image/png") {
+    const settings = pngCompressionSettings(strength);
+    compressed = settings.mode === "indexed"
+      ? await quantizePng(canvas, settings.maxColors, settings.colorStep, settings.alphaStep)
+      : await encodeTrueColorPng(canvas, settings.colorStep, settings.alphaStep);
+  } else {
+    compressed = await canvasToBlob(canvas, type, quality);
+  }
+  const converting = els.targetFormat.value !== "original" && type !== item.file.type;
+  const result = !converting && compressed.size >= item.file.size ? item.file : compressed;
+  if (item.resultUrl) URL.revokeObjectURL(item.resultUrl);
+  item.resultBlob = result;
+  item.outputName = result === item.file ? item.file.name : outputFileName(item, type);
+  item.resultUrl = URL.createObjectURL(result);
+  item.resultWidth = result === item.file ? item.image.naturalWidth : canvas.width;
+  item.resultHeight = result === item.file ? item.image.naturalHeight : canvas.height;
+  item.status = "done";
+  item.error = "";
+}
+
+async function compressAll() {
+  if (!state.items.length || state.processing) return;
+  state.processing = true;
+  els.progressBar.style.width = "0%";
+  updateActions();
+  let completed = 0;
+  for (const item of state.items) {
+    item.status = "processing";
+    state.activeId = item.id;
+    renderQueue();
+    updatePreview();
+    els.progressText.textContent = `正在压缩 ${completed + 1}/${state.items.length}：${item.file.name}`;
+    try {
+      await compressItem(item);
+    } catch (error) {
+      item.status = "error";
+      item.error = error.message || "压缩失败";
+    }
+    completed += 1;
+    els.progressBar.style.width = `${completed / state.items.length * 100}%`;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  state.processing = false;
+  renderQueue();
+  updatePreview();
+  updateActions();
+  const success = state.items.filter((item) => item.resultBlob).length;
+  els.progressText.textContent = `压缩完成：成功 ${success} 张，共 ${state.items.length} 张`;
+}
+
+function timestampName() {
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, "0");
+  return `图片压缩_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+}
+
+function openDirectoryDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DIRECTORY_DB, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(DIRECTORY_STORE);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function loadStoredDirectory() {
+  try {
+    const db = await openDirectoryDb();
+    const handle = await new Promise((resolve, reject) => {
+      const tx = db.transaction(DIRECTORY_STORE, "readonly");
+      const request = tx.objectStore(DIRECTORY_STORE).get(DIRECTORY_KEY);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+      tx.oncomplete = () => db.close();
+    });
+    return handle;
+  } catch {
+    return null;
+  }
+}
+
+async function saveStoredDirectory(handle) {
+  try {
+    const db = await openDirectoryDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(DIRECTORY_STORE, "readwrite");
+      tx.objectStore(DIRECTORY_STORE).put(handle, DIRECTORY_KEY);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  } catch {
+    // Directory handles may only persist for the current browser session.
+  }
+}
+
+async function pickExportDirectory() {
+  const previous = await loadStoredDirectory();
+  const options = { mode: "readwrite", id: "smile-image-compress-export" };
+  if (previous) options.startIn = previous;
+  try {
+    const handle = await window.showDirectoryPicker(options);
+    await saveStoredDirectory(handle);
+    return handle;
+  } catch (error) {
+    if (error.name === "AbortError") return null;
+    if (!previous) throw error;
+    const handle = await window.showDirectoryPicker({ mode: "readwrite", id: "smile-image-compress-export" });
+    await saveStoredDirectory(handle);
+    return handle;
+  }
+}
+
+async function exportResults() {
+  const completed = state.items.filter((item) => item.resultBlob);
+  if (!completed.length || state.exporting) return;
+  state.exporting = true;
+  updateActions();
+  try {
+    if (!("showDirectoryPicker" in window)) {
+      return await buildAndDownloadZip("当前浏览器不支持选择目录，已改为下载 ZIP");
+    }
+
+    try {
+      const parent = await pickExportDirectory();
+      if (!parent) return; // 用户取消目录选择，不回退
+      const folderName = timestampName();
+      const output = await parent.getDirectoryHandle(folderName, { create: true });
+      for (let index = 0; index < completed.length; index++) {
+        const item = completed[index];
+        els.folderStatus.textContent = `正在导出 ${index + 1}/${completed.length}：${item.outputName}`;
+        const fileHandle = await output.getFileHandle(item.outputName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(item.resultBlob);
+        await writable.close();
+        item.status = "exported";
+      }
+      renderQueue();
+      els.folderStatus.textContent = `已导出到 ${parent.name}/${folderName}`;
+    } catch (error) {
+      if (error && error.name === "AbortError") return; // 用户主动取消，不做回退
+      console.warn("目录导出失败，自动回退为 ZIP 下载：", error);
+      await buildAndDownloadZip("选择目录失败，已改为下载 ZIP");
+    }
+  } finally {
+    state.exporting = false;
+    updateActions();
+  }
+}
+
+function updateActions() {
+  const completed = state.items.filter((item) => item.resultBlob).length;
+  els.compressBtn.disabled = !state.items.length || state.processing || state.exporting;
+  els.exportBtn.disabled = !completed || state.processing || state.exporting;
+  els.zipBtn.disabled = !completed || state.processing || state.exporting;
+  els.clearBtn.disabled = !state.items.length || state.processing || state.exporting;
+  if (!state.items.length) {
+    els.progressBar.style.width = "0%";
+    els.progressText.textContent = "等待添加图片";
+  }
+}
+
+function invalidateCompressionResults() {
+  for (const item of state.items) {
+    if (item.resultUrl) URL.revokeObjectURL(item.resultUrl);
+    item.resultUrl = null;
+    item.resultBlob = null;
+    item.resultWidth = null;
+    item.resultHeight = null;
+    item.outputName = item.file.name;
+    item.status = "ready";
+    item.error = "";
+  }
+  renderQueue();
+  updatePreview();
+  updateActions();
+}
+
+function updateStrengthDisplay() {
+  const strength = Number(els.strength.value);
+  els.strengthValue.textContent = `${strength}%`;
+  if (strength === 100) els.strengthHint.textContent = "最强压缩，使用更少颜色，体积优先。";
+  else if (strength >= 70) els.strengthHint.textContent = "强力索引色压缩，强度越高颜色越少。";
+  else if (strength >= 30) els.strengthHint.textContent = "真彩均衡压缩，逐步合并相近颜色。";
+  else els.strengthHint.textContent = "低强度真彩压缩，优先保留原图细节。";
+}
+
+function updateResizeControls() {
+  const mode = els.resizeMode.value;
+  els.resizePercentRow.classList.toggle("is-hidden", mode !== "percent");
+  els.resizeDimensionRow.classList.toggle("is-hidden", mode !== "dimension");
+  const percent = clampNumber(els.resizePercent.value, 1, 100);
+  els.resizePercent.value = percent;
+  els.resizePercentValue.textContent = `${percent}%`;
+  const size = activeImageSize();
+  if (mode === "original") {
+    els.resizeHint.textContent = "默认保持图片原始像素尺寸。";
+  } else if (mode === "percent") {
+    els.resizeHint.textContent = size
+      ? `当前预览将输出 ${Math.max(1, Math.round(size.width * percent / 100))} × ${Math.max(1, Math.round(size.height * percent / 100))}`
+      : "按百分比等比缩小所有图片。";
+  } else {
+    syncResizeDimensionInputs();
+    els.resizeHint.textContent = size
+      ? "宽度或高度填一项即可，另一项会按当前图片比例自动调整。"
+      : "选择图片后，宽度和高度会按图片比例联动。";
+  }
+}
+
+function syncResizeDimensionInputs(changedField = state.resizeDimensionSource) {
+  const size = activeImageSize();
+  if (!size) return;
+  if (changedField === "width") {
+    const width = Math.floor(Number(els.resizeWidth.value) || 0);
+    if (width > 0) {
+      const targetWidth = Math.min(size.width, width);
+      els.resizeWidth.value = targetWidth;
+      els.resizeHeight.value = Math.max(1, Math.round(targetWidth * size.height / size.width));
+    }
+    return;
+  }
+  const height = Math.floor(Number(els.resizeHeight.value) || 0);
+  if (height > 0) {
+    const targetHeight = Math.min(size.height, height);
+    els.resizeHeight.value = targetHeight;
+    els.resizeWidth.value = Math.max(1, Math.round(targetHeight * size.width / size.height));
+  }
+}
+
+els.input.addEventListener("change", async () => {
+  await addFiles(els.input.files);
+  els.input.value = "";
+});
+els.clearBtn.addEventListener("click", clearItems);
+els.compressBtn.addEventListener("click", compressAll);
+els.exportBtn.addEventListener("click", exportResults);
+els.zipBtn.addEventListener("click", () => buildAndDownloadZip("已导出 ZIP"));
+els.targetFormat.addEventListener("change", () => {
+  const hints = {
+    original: "保持每张图片原有格式。",
+    "image/png": "转换为透明兼容的 PNG；照片类图片体积可能变大。",
+    "image/webp": "转换为 WebP，通常体积最小并支持透明背景。",
+    "image/jpeg": "转换为 JPG，透明区域会填充为白色。",
+  };
+  els.targetFormatHint.textContent = hints[els.targetFormat.value];
+  invalidateCompressionResults();
+});
+els.strength.addEventListener("input", updateStrengthDisplay);
+els.strength.addEventListener("change", invalidateCompressionResults);
+els.resizeMode.addEventListener("change", () => {
+  updateResizeControls();
+  invalidateCompressionResults();
+});
+els.resizePercent.addEventListener("input", updateResizeControls);
+els.resizePercent.addEventListener("change", invalidateCompressionResults);
+els.resizeWidth.addEventListener("input", () => {
+  state.resizeDimensionSource = "width";
+  syncResizeDimensionInputs("width");
+  updateResizeControls();
+});
+els.resizeWidth.addEventListener("change", invalidateCompressionResults);
+els.resizeHeight.addEventListener("input", () => {
+  state.resizeDimensionSource = "height";
+  syncResizeDimensionInputs("height");
+  updateResizeControls();
+});
+els.resizeHeight.addEventListener("change", invalidateCompressionResults);
+
+for (const input of els.previewModeInputs) {
+  input.addEventListener("change", () => setPreviewMode(input.value));
+}
+els.previewBackground.addEventListener("change", applyPreviewBackground);
+els.previewColor.addEventListener("input", applyPreviewBackground);
+
+for (const stage of previewStages) {
+  enablePreviewNavigation(stage);
+}
+
+els.compareDivider.addEventListener("pointerdown", (event) => {
+  if (els.compareDivider.classList.contains("is-hidden")) return;
+  event.stopPropagation();
+  state.compareDragging = true;
+  els.compareDivider.setPointerCapture(event.pointerId);
+  setComparePosition(comparePositionFromEvent(event));
+});
+els.compareDivider.addEventListener("pointermove", (event) => {
+  if (state.compareDragging) setComparePosition(comparePositionFromEvent(event));
+});
+els.compareDivider.addEventListener("pointerup", () => {
+  state.compareDragging = false;
+});
+els.compareDivider.addEventListener("pointercancel", () => {
+  state.compareDragging = false;
+});
+
+for (const eventName of ["dragenter", "dragover"]) {
+  els.dropZone.addEventListener(eventName, (event) => {
+    event.preventDefault();
+    els.dropZone.classList.add("dragover");
+  });
+}
+for (const eventName of ["dragleave", "drop"]) {
+  els.dropZone.addEventListener(eventName, (event) => {
+    event.preventDefault();
+    els.dropZone.classList.remove("dragover");
+  });
+}
+els.dropZone.addEventListener("drop", (event) => addFiles(event.dataTransfer.files));
+
+window.addEventListener("beforeunload", () => state.items.forEach(releaseItem));
+
+renderQueue();
+setPreviewMode("compare");
+applyPreviewBackground();
+setComparePosition(50);
+renderPreviewTransform();
+updateStrengthDisplay();
+updateResizeControls();
+updatePreview();
+updateActions();
+
+</script>
+  </body>
+</html>

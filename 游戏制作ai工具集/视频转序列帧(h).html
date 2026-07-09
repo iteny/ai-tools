@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FrameRonin - 视频转序列帧</title>
+<style>
+:root{
+    --accent:#b55233;
+    --accent-soft: rgba(181,82,51,0.55);
+    --beige: rgba(255,255,255,0.46);
+    --beige-2: rgba(255,255,255,0.52);
+    --border: rgba(255,255,255,0.55);
+    --dark: rgba(28,22,18,0.55);
+    --dark-2: rgba(28,22,18,0.62);
+    --text-dark:#f3ece0;
+    --muted: rgba(60,45,35,0.62);
+    --glass-blur: blur(22px) saturate(175%);
+    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,0.65), rgba(255,255,255,0.04) 42%);
+    --glass-shadow: 0 8px 30px rgba(40,20,10,0.18), inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 1px rgba(255,255,255,0.18), inset 0 0 18px rgba(255,255,255,0.10);
+    --radius-lg: 22px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+  }
+  *{box-sizing:border-box;}
+  html,body{min-height:100%;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    color:#3a322a;
+    background: linear-gradient(130deg,#ffd1a9,#ff8e72,#c95c7a,#8e5bd0,#4f9ed8,#ffd1a9);
+    background-size: 400% 400%;
+    animation: bgShift 26s ease infinite;
+  }
+  @keyframes bgShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+  body::before{
+    content:''; position:fixed; inset:-15%; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(38% 38% at 18% 28%, rgba(255,255,255,0.35), transparent 60%),
+      radial-gradient(34% 34% at 82% 72%, rgba(255,255,255,0.22), transparent 60%);
+    animation: orbFloat 22s ease-in-out infinite alternate;
+  }
+  @keyframes orbFloat{ from{transform:translate(0,0)} to{transform:translate(4%,-3%)} }
+  header{
+    position:sticky; top:0; z-index:50;
+    background: rgba(255,255,255,0.26);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid rgba(255,255,255,0.45);
+    box-shadow: 0 4px 22px rgba(40,20,10,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+    color:#2f2620;
+    padding:13px 22px;
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  }
+  header .brand{font-size:20px;font-weight:700;letter-spacing:.5px;color:#2f2620;}
+  header .sub{font-size:13px;opacity:.72;color:#3a322a;}
+  header .ver{font-size:12px;background:var(--accent-soft);color:#fff;padding:2px 9px;border-radius:12px;font-weight:600;border:1px solid rgba(255,255,255,0.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px;}
+  .panel{
+    position:relative;
+    background: var(--beige-2);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    background-image: var(--glass-sheen);
+    border: 1px solid var(--border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--radius-lg);
+    padding:20px;
+    margin-bottom:18px;
+    transition: transform .25s cubic-bezier(.2,.7,.2,1), box-shadow .25s;
+  }
+  .panel:hover{ transform: translateY(-2px); box-shadow: 0 16px 44px rgba(40,20,10,0.22), inset 0 1px 0 rgba(255,255,255,0.8), inset 0 0 22px rgba(255,255,255,0.12); }
+  h3.ttl{margin:0 0 8px;font-size:15px;display:block;}
+  .hint{font-size:12px;color:var(--muted);display:block;margin-bottom:12px;line-height:1.5;}
+  .drop{
+    position:relative;
+    border: 1.5px dashed rgba(255,255,255,0.7);
+    border-radius: var(--radius-lg);
+    padding:48px 24px;
+    text-align:center;
+    background: rgba(255,255,255,0.30);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    background-image: var(--glass-sheen);
+    box-shadow: var(--glass-shadow);
+    cursor:pointer;
+    transition: transform .2s, border-color .2s;
+  }
+  .drop:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .drop .icon{font-size:46px;color:var(--accent);}
+  .drop .t1{font-size:15px;margin-top:8px;}
+  .drop .t2{font-size:12px;color:var(--muted);margin-top:6px;}
+  .btn{
+    position:relative; overflow:hidden;
+    border: 1px solid rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.32);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color:#3a322a;
+    border-radius: var(--radius-sm);
+    padding:8px 18px;
+    font-size:14px; font-weight:600;
+    cursor:pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 4px 14px rgba(40,20,10,0.12);
+    transition: transform .12s, filter .15s, box-shadow .15s;
+  }
+  .btn:not(.ghost):not(.link){
+    background: var(--accent-soft);
+    color:#fff;
+    border-color: rgba(255,255,255,0.35);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 18px rgba(181,82,51,0.30);
+  }
+  .btn:hover{ filter:brightness(1.06); transform: translateY(-1px); }
+  .btn:active{ transform: translateY(0) scale(.98); }
+  .btn:disabled{opacity:.45;cursor:not-allowed;filter:none;transform:none;}
+  .btn.ghost{background: rgba(255,255,255,0.18);color:var(--accent);}
+  .btn.mini{padding:4px 12px;font-size:12px;}
+  .btn.link{padding:0;background:none;border:none;color:var(--accent);text-decoration:underline;font-size:12px;cursor:pointer;box-shadow:none;}
+  .radio{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:#3a322a;margin-right:16px;cursor:pointer;}
+  .radio input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer;}
+  .row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;}
+  .col{flex:1 1 200px;min-width:160px;}
+  label.fld{font-size:12px;color:var(--muted);display:block;margin-bottom:6px;}
+  input[type=number],input[type=text]{
+    width:100%;padding:7px 10px;border:1px solid rgba(255,255,255,0.6);border-radius:var(--radius-sm);
+    background: rgba(255,255,255,0.45);
+    -webkit-backdrop-filter: blur(8px);backdrop-filter: blur(8px);
+    font-size:14px;color:#3a322a;
+    box-shadow: inset 0 1px 2px rgba(40,20,10,0.06);
+  }
+  input[type=number]:focus,input[type=text]:focus{ outline:none; border-color: var(--accent); box-shadow:0 0 0 3px rgba(181,82,51,0.20);}
+  input[type=color]{width:46px;height:32px;border:1px solid rgba(255,255,255,0.6);border-radius:10px;background:rgba(255,255,255,0.5);padding:2px;cursor:pointer;vertical-align:middle;}
+  .rangewrap{background:var(--dark);border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}
+  video{width:100%;max-height:280px;display:block;background:#000;border-radius:8px;}
+  input[type=range]{ -webkit-appearance:none;appearance:none; width:100%; height:6px; border-radius:6px; background:rgba(255,255,255,0.4); outline:none; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none;appearance:none; width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,0.92);box-shadow:0 1px 4px rgba(40,20,10,0.3), inset 0 0 0 1px rgba(181,82,51,0.4); cursor:pointer; border:2px solid var(--accent);}
+  input[type=range]::-moz-range-thumb{ width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--accent);cursor:pointer;}
+  .grid-bg{background:repeating-conic-gradient(#c9bfb0 0% 25%, #e4dbcf 0% 50%) 50% / 16px 16px;}
+  .thumb-grid{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:8px;margin-bottom:16px;}
+  .thumb{
+    width:88px;text-align:center;border:1px solid rgba(255,255,255,0.5);border-radius:var(--radius-sm);overflow:hidden;position:relative;background:rgba(255,255,255,0.35);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 3px 10px rgba(40,20,10,0.12);
+  }
+  .thumb.dup{border:2px solid #a63d2e;}
+  .thumb img{width:100%;height:66px;object-fit:contain;display:block;}
+  .thumb .lbl{background:rgba(28,22,18,0.6);color:#f3ece0;font-size:11px;padding:2px 0;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+  .thumb .chk{position:absolute;top:4px;right:4px;z-index:2;}
+  .thumb .dupbadge{
+    position:absolute;top:4px;left:4px;z-index:2;background:#a63d2e;color:#f0e6d4;
+    font-size:10px;padding:1px 4px;border-radius:4px;
+  }
+  .animbox{background:rgba(255,255,255,0.3);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--border);box-shadow:var(--glass-shadow);border-radius:var(--radius-md);padding:16px;text-align:center;margin:8px 0 16px;}
+  .animimg{max-width:100%;max-height:360px;background:#ede6dc;border-radius:4px;}
+  .video-dark{background:var(--dark);border-radius:var(--radius-md);overflow:hidden;border:1px solid rgba(255,255,255,0.2);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}
+  .sliderbox{padding:12px 16px;background:var(--dark-2);border:1px solid rgba(255,255,255,0.18);border-radius:var(--radius-md);}
+  .cropprev{max-width:100%;overflow:auto;max-height:400px;border:1px solid rgba(255,255,255,0.5);border-radius:var(--radius-md);margin-top:8px;background:rgba(255,255,255,0.3);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .matte-pair{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+  .matte-cell{flex:1 1 200px;min-width:200px;border:1px solid rgba(255,255,255,0.5);border-radius:var(--radius-md);overflow:hidden;padding:8px;background:rgba(255,255,255,0.32);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:var(--glass-shadow);}
+  .matte-cell img{width:100%;display:block;margin-top:8px;cursor:crosshair;}
+  .divider{height:1px;background:var(--border);margin:20px 0 16px;opacity:.6;}
+  .progress{height:8px;background:rgba(255,255,255,0.4);border-radius:8px;overflow:hidden;margin-bottom:12px;box-shadow:inset 0 1px 2px rgba(40,20,10,0.12);}
+  .progress>i{display:block;height:100%;background:linear-gradient(90deg,#d9865f,var(--accent));width:0;box-shadow:0 0 8px rgba(181,82,51,0.5);}
+  .pillrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;}
+  .sizebtns .btn.ghost{margin:0 4px 6px 0;}
+  .exportprev{max-width:100%;overflow:auto;margin-bottom:12px;border:1px solid rgba(255,255,255,0.5);border-radius:var(--radius-md);padding:10px;background:rgba(255,255,255,0.32);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);min-height:120px;position:relative;box-shadow:var(--glass-shadow);}
+  .exportprev img{max-width:100%;height:auto;display:block;border-radius:4px;}
+  .brush-stage{position:relative;max-width:100%;overflow:auto;border:1px solid rgba(255,255,255,0.5);border-radius:var(--radius-sm);cursor:crosshair;background:rgba(255,255,255,0.3);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .brush-stage canvas{width:100%;height:auto;display:block;vertical-align:bottom;}
+  .msg{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(28,22,18,0.6);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);color:#fff;padding:11px 20px;border-radius:14px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:99;max-width:80%;border:1px solid rgba(255,255,255,0.22);box-shadow:0 10px 30px rgba(0,0,0,0.25);}
+  .msg.show{opacity:1;}
+  .hidden{display:none !important;}
+  .kv{font-size:12px;color:var(--muted);}
+  .small{font-size:11px;}
+  .inline{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .back-link{color:#2f2620;text-decoration:none;font-size:13px;margin-left:auto;opacity:.8;}
+  .back-link:hover{opacity:1;}
+  @media (prefers-reduced-motion: reduce){
+    body{animation:none;}
+    body::before{animation:none;}
+    .panel:hover,.drop:hover{transform:none;}
+  }
+
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">FrameRonin</span>
+  <span class="sub">视频转序列帧 · 抠图 · Sprite Sheet</span>
+  <span class="ver">V3 复刻</span>
+  <a class="back-link" id="backLink" href="#">← 返回上传 (B)</a>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ 步骤1：上传 ============ -->
+  <section class="panel" id="uploadStep">
+    <h3 class="ttl">视频转序列帧</h3>
+    <p class="hint">提取视频帧、抠图、生成 Sprite Sheet</p>
+    <div class="drop" id="drop">
+      <div class="icon">⬇</div>
+      <div class="t1">点击或拖拽视频到此处</div>
+      <div class="t2" id="uploadFormats">支持 MP4 / MOV / WebM / AVI / MKV，最大 200MB</div>
+      <input type="file" id="fileInput" accept=".mp4,.mov,.webm,.avi,.mkv" style="display:none" />
+    </div>
+    <div id="fileInfo" class="kv" style="margin-top:12px;"></div>
+    <div style="margin-top:12px;">
+      <button class="btn" id="nextBtn" disabled>下一步：参数设置</button>
+    </div>
+  </section>
+
+  <!-- ============ 步骤2：参数/处理 ============ -->
+  <section id="paramsStep" class="hidden">
+
+    <!-- 视频预览 + 时间范围 -->
+    <div class="panel">
+      <h3 class="ttl">视频预览与时间范围</h3>
+      <div class="video-dark">
+        <video id="video" controls></video>
+        <div class="sliderbox">
+          <div class="hint" style="margin-bottom:8px;color:#cfc2b0;">拖动滑块选择起止时间，松手后视频自动定位到该位置</div>
+          <div class="rangewrap"><canvas id="rangeCanvas" style="width:100%;height:42px;display:block;"></canvas></div>
+          <div class="pillrow">
+            <button class="btn mini" id="replayBtn">重播</button>
+            <button class="btn mini ghost" id="autoReplayBtn">自动重播</button>
+            <span class="kv" id="rangeInfo"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 提取帧参数 + 裁剪 + 提取 -->
+    <div class="panel">
+      <h3 class="ttl">提取帧</h3>
+      <p class="hint" id="extractHint">按当前时间范围和帧率提取视频帧</p>
+      <div id="cropBox" class="hidden" style="margin-bottom:16px;padding:12px;background:var(--beige);border-radius:8px;border:1px solid var(--border);">
+        <div class="hint" style="margin-bottom:8px;">裁剪范围 · 从边缘裁掉的像素数，提取时仅保留中间区域</div>
+        <div class="pillrow">
+          <button class="btn mini" id="cropManualBtn">手动拖拽调整裁剪</button>
+          <button class="btn mini ghost hidden" id="cropCloseBtn">关闭预览</button>
+        </div>
+        <div id="cropPrevWrap" class="cropprev hidden"></div>
+        <div class="row" id="cropInputs" style="margin-top:12px;">
+          <div class="col"><label class="fld">左</label><input type="number" id="cropLeft" min="0" value="0"></div>
+          <div class="col"><label class="fld">上</label><input type="number" id="cropTop" min="0" value="0"></div>
+          <div class="col"><label class="fld">右</label><input type="number" id="cropRight" min="0" value="0"></div>
+          <div class="col"><label class="fld">下</label><input type="number" id="cropBottom" min="0" value="0"></div>
+        </div>
+        <div id="cropResult" class="kv hidden" style="margin-top:8px;"></div>
+        <button class="btn link hidden" id="resetCropBtn" style="padding:0;margin-top:4px;">重置裁剪</button>
+      </div>
+      <div class="pillrow" style="margin-bottom:16px;">
+        <button class="btn" id="extractBtn">提取帧</button>
+        <button class="btn ghost hidden" id="downloadFramesBtn">打包下载</button>
+      </div>
+      <div class="progress hidden" id="extractProgress"><i></i></div>
+    </div>
+
+    <!-- 帧选择 + 动画预览 + 抠图 -->
+    <div id="afterExtract" class="hidden">
+
+      <div class="pillrow" style="margin-bottom:8px;">
+        <h3 class="ttl" style="margin:0;" id="selectTitle">选择要处理的帧</h3>
+        <button class="btn link" id="selAll">全选</button>
+        <button class="btn link" id="selNone">全不选</button>
+      </div>
+      <div class="thumb-grid" id="thumbGrid"></div>
+      <div id="animPreview"></div>
+
+      <div class="divider"></div>
+
+      <h3 class="ttl">抠图</h3>
+      <p class="hint">去除背景生成透明 PNG · 点「自动检测」或在原图上取色确定背景色，再「更新预览」查看 · 默认只移除与边缘连通的背景并去除绿/蓝边，主体内部同色区域不会被挖穿</p>
+      <div class="pillrow" style="margin-bottom:16px;">
+        <label class="fld" style="margin:0;">ChromaKey 色度键抠图（适合纯色/近似纯色背景）</label>
+      </div>
+      <div class="row" style="margin-bottom:16px;">
+        <div class="col">
+          <label class="fld">背景颜色</label>
+          <div class="inline">
+            <input type="color" id="bgColor" value="#ffffff">
+            <span class="kv" id="bgHex">#ffffff</span>
+            <button class="btn mini ghost" id="autoBgBtn" title="从画面四角自动识别背景色">自动检测</button>
+          </div>
+        </div>
+        <div class="col">
+          <label class="fld">容差 (0-100)：<span id="tolVal">40</span></label>
+          <input type="range" class="slider" id="tolerance" min="1" max="100" value="40">
+        </div>
+        <div class="col">
+          <label class="fld">边缘羽化 (0-30)：<span id="featherVal">10</span></label>
+          <input type="range" class="slider" id="feather" min="0" max="30" value="10">
+        </div>
+      </div>
+      <div class="pillrow" style="margin-bottom:16px;">
+        <label class="radio" style="margin-right:20px;"><input type="checkbox" id="edgeOnly" checked> 仅移除边缘连通的背景（推荐，避免主体被挖空）</label>
+        <label class="radio"><input type="checkbox" id="despill" checked> 去除边缘杂色（消除绿边/蓝边）</label>
+      </div>
+      <div class="matte-pair">
+        <div class="matte-cell">
+          <label class="fld">原图（首帧）</label>
+          <img id="origImg" alt="原图" style="cursor:crosshair;" title="点击取色">
+        </div>
+        <div class="matte-cell" id="mattePrevCell">
+          <div class="inline" style="justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <label class="fld" style="margin:0;">抠图预览</label>
+            <button class="btn mini ghost hidden" id="bgToggleBtn">纯色背景</button>
+          </div>
+          <div id="mattePrevInner"></div>
+        </div>
+      </div>
+      <div class="pillrow">
+        <button class="btn mini" id="updatePreviewBtn">更新预览</button>
+        <button class="btn" id="startMatteBtn">开始抠图</button>
+        <button class="btn ghost" id="skipMatteBtn">不抠图，进入下一步</button>
+      </div>
+      <div class="progress hidden" id="matteProgress"><i></i></div>
+
+      <div id="mattedSection" class="hidden">
+        <div class="divider"></div>
+        <div class="pillrow">
+          <h3 class="ttl" style="margin:0;" id="mattedTitle">抠图处理后的帧</h3>
+          <button class="btn" id="downloadMattedBtn">打包下载处理后的帧</button>
+        </div>
+        <div class="thumb-grid" id="mattedGrid" style="background:var(--beige);border-radius:8px;padding:12px;"></div>
+      </div>
+    </div>
+
+    <!-- 导出参数 + 预览 -->
+    <div id="exportSection" class="hidden">
+      <div class="divider"></div>
+      <h3 class="ttl">导出参数</h3>
+      <div class="panel" style="background:var(--beige);">
+        <h3 class="ttl" style="display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">⚙</span> 设置帧图片尺寸</h3>
+        <div class="row">
+          <div class="col">
+            <label class="fld">自定义尺寸</label>
+            <input type="number" id="targetW" min="32" max="4096" placeholder="宽">
+            <input type="number" id="targetH" min="32" max="4096" placeholder="高" style="margin-top:8px;">
+            <div class="kv" id="singleSize" style="margin-top:8px;"></div>
+            <div class="kv" id="aspectRatio"></div>
+            <div class="kv">修改任一数值时，另一个会自动按比例调整</div>
+          </div>
+          <div class="col">
+            <label class="fld">常用尺寸预设</label>
+            <div class="kv small">按单帧长宽比生成</div>
+            <div class="sizebtns" id="sizePresets" style="margin-top:8px;"></div>
+            <div style="margin-top:16px;">
+              <label class="fld">图片排布</label>
+              <div class="row">
+                <div class="col"><input type="number" id="columns" min="1" max="64" placeholder="列数"></div>
+                <div class="col"><input type="number" id="padding" min="0" max="64" placeholder="边距"></div>
+                <div class="col"><input type="number" id="spacing" min="0" max="64" placeholder="间距"></div>
+              </div>
+              <div class="kv small" style="margin-top:8px;line-height:1.5;">三个数字从左到右依次为：列数（雪碧图每行放几帧）、边距（每格内四边留白，两侧格子各留一圈会叠成「图与图之间的缝」，默认 0 可紧密拼接）、间距（格子与格子之间的额外空隙像素，默认 0）。</div>
+              <div class="kv" id="rowsCount" style="margin-top:8px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="background:var(--beige-2);margin-top:16px;">
+          <h3 class="ttl" style="display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">🎨</span> 背景</h3>
+          <div class="kv small" style="margin-bottom:10px;line-height:1.5;">选择 Sprite Sheet 的整体背景：透明（默认，导出带 Alpha 透明通道）或填充指定纯色。</div>
+          <div class="pillrow" style="margin-bottom:4px;">
+            <label class="radio"><input type="radio" name="bgMode" value="transparent" checked> 透明背景</label>
+            <label class="radio"><input type="radio" name="bgMode" value="color"> 背景颜色</label>
+            <input type="color" id="exportBgColor" value="#ffffff">
+            <span class="kv" id="exportBgHex">#ffffff</span>
+          </div>
+        </div>
+        <div class="pillrow" style="margin-top:8px;">
+          <button class="btn" id="exportBtn">导出 Sprite Sheet</button>
+        </div>
+        <div id="exportResult" class="hidden">
+          <div class="divider"></div>
+          <h3 class="ttl">预览</h3>
+          <div class="exportprev" id="exportPrev">
+            <div id="strokeSpin" class="hidden" style="position:absolute;inset:0;background:rgba(228,219,207,.85);display:flex;align-items:center;justify-content:center;z-index:10;">处理中…</div>
+            <img id="exportImg" alt="Sprite Sheet 预览">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label class="fld">内描边（导出后再应用）</label>
+            <div class="inline">
+              <span class="kv">描边宽度</span>
+              <input type="number" id="strokeWidth" min="0" max="16" value="0" style="width:80px;">
+              <span class="kv">描边颜色</span>
+              <input type="color" id="strokeColor" value="#000000">
+              <button class="btn" id="applyStrokeBtn">应用并生成</button>
+            </div>
+            <div class="kv small" style="margin-top:4px;">设置参数后点击「应用并生成」更新预览，0 为不描边。下载将使用当前预览结果</div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label class="fld">文件名（不含扩展名）</label>
+            <input type="text" id="exportFileName" value="sprite_sheet" style="width:220px;" >
+          </div>
+          <div class="pillrow">
+            <button class="btn" id="downloadZipBtn">下载 ZIP (PNG + index.json)</button>
+            <button class="btn ghost" id="downloadPngBtn">下载 PNG</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<div class="msg" id="msg"></div>
+
+<script>
+/* =========================================================================
+ * FrameRonin 视频转序列帧 · 复刻版（单文件 / 纯浏览器本地处理）
+ * 算法严格移植自开源仓库 CreateKIBO/FrameRonin：
+ *   帧提取  -> ParamsStep.extractFrames
+ *   抠图    -> utils.applyChromaKey（欧氏 RGB 距离色度键）
+ *   合成    -> utils.composeSpriteSheetClient + resizeFrameToCanvas
+ *   内描边  -> utils.applyInnerStroke（距离变换）
+ *   重复帧  -> utils.analyzeDuplicateFrames（指纹 + 连通分组）
+ * ========================================================================= */
+
+const $ = (id) => document.getElementById(id);
+const ALLOWED = ['.mp4','.mov','.webm','.avi','.mkv'];
+
+const state = {
+  file:null, videoUrl:null, duration:0, videoSize:null,
+  range:[0,5], autoReplay:false, rangeRef:[0,5],
+  extractedFrames:[],
+  duplicateMarkers:new Map(),
+  frameSelected:[],
+  extractedFrameSize:null,
+  mattedFrames:[],
+  mattePreviewUrl:null, mattePreviewBgSolid:false, brushMaskDataUrl:null,
+  exportedPreview:null, displayedPngBlob:null, displayPngUrl:null,
+  crop:{left:0,top:0,right:0,bottom:0},
+};
+
+/* ---------- 工具 ---------- */
+function showMsg(text){ const m=$('msg'); m.textContent=text; m.classList.add('show'); clearTimeout(showMsg._t); showMsg._t=setTimeout(()=>m.classList.remove('show'),2200); }
+function formatTime(sec){ const m=Math.floor(sec/60), s=Math.floor(sec%60); return `${m}:${s.toString().padStart(2,'0')}`; }
+function setProgress(elId,pct){ const el=$(elId); if(!el)return; el.classList.remove('hidden'); el.firstElementChild.style.width=pct+'%'; }
+function hexToRgb(hex){ const m=hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i); if(!m)return null; return [parseInt(m[1],16),parseInt(m[2],16),parseInt(m[3],16)]; }
+function sanitizeFileName(s){ return (s||'').replace(/[<>:"/\\|?*]/g,'_').trim()||'sprite_sheet'; }
+
+/* ================= 上传 ================= */
+$('drop').addEventListener('click',()=>$('fileInput').click());
+$('fileInput').addEventListener('change',e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+['dragover','dragenter'].forEach(ev=>$('drop').addEventListener(ev,e=>e.preventDefault()));
+$('drop').addEventListener('drop',e=>{ e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) handleFile(f); });
+function handleFile(f){
+  const ext='.'+(f.name.split('.').pop()||'').toLowerCase();
+  if(!ALLOWED.includes(ext)){ showMsg('仅支持 '+ALLOWED.join(' ')+' 格式'); return; }
+  if(f.size>200*1024*1024){ showMsg('文件不得超过 200MB'); return; }
+  if(state.videoUrl) URL.revokeObjectURL(state.videoUrl);
+  state.file=f; state.videoUrl=URL.createObjectURL(f);
+  $('fileInfo').textContent=`已选择: ${f.name} (${(f.size/1024/1024).toFixed(2)} MB)`;
+  $('nextBtn').disabled=false;
+}
+$('nextBtn').addEventListener('click',()=>{
+  if(!state.file) return;
+  $('uploadStep').classList.add('hidden');
+  $('paramsStep').classList.remove('hidden');
+  requestAnimationFrame(()=>drawRangeCanvas());
+  initParamsStep();
+});
+$('backLink').addEventListener('click',e=>{ e.preventDefault(); resetToUpload(); });
+document.addEventListener('keydown',e=>{
+  if(e.key==='b'||e.key==='B'){
+    const tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea'||e.ctrlKey||e.metaKey||e.altKey) return;
+    resetToUpload();
+  }
+});
+function resetToUpload(){
+  if(state.videoUrl) URL.revokeObjectURL(state.videoUrl);
+  Object.assign(state,{file:null,videoUrl:null,duration:0,videoSize:null,range:[0,5],rangeRef:[0,5],
+    extractedFrames:[],duplicateMarkers:new Map(),frameSelected:[],extractedFrameSize:null,
+    mattedFrames:[],mattePreviewUrl:null,mattePreviewBgSolid:false,brushMaskDataUrl:null,
+    exportedPreview:null,displayedPngBlob:null,displayPngUrl:null,crop:{left:0,top:0,right:0,bottom:0}});
+  $('fileInput').value=''; $('fileInfo').textContent=''; $('nextBtn').disabled=true;
+  $('paramsStep').classList.add('hidden'); $('uploadStep').classList.remove('hidden');
+  $('video').removeAttribute('src'); $('video').load();
+}
+
+/* ================= ParamsStep 初始化 ================= */
+function initParamsStep(){
+  const v=$('video'); v.src=state.videoUrl;
+  v.addEventListener('loadedmetadata',onVideoLoaded);
+  v.addEventListener('timeupdate',onTimeUpdate);
+  drawRangeCanvas();
+}
+function onVideoLoaded(){
+  const v=$('video'); const d=v.duration;
+  if(isFinite(d)&&d>0){
+    state.duration=d; state.videoSize={w:v.videoWidth,h:v.videoHeight};
+    state.range=[0,d]; state.rangeRef=[0,d];
+    $('cropBox').classList.remove('hidden');
+    updateExtractHint(); drawRangeCanvas(); updateRangeInfo();
+    $('startSecInput').value=0; $('endSecInput').value=d.toFixed(1);
+  }
+}
+function onTimeUpdate(){
+  if(!state.autoReplay) return;
+  const v=$('video'); const [s,e]=state.rangeRef;
+  if(e>s && v.currentTime>=e-0.05){ v.currentTime=s; v.play(); }
+}
+function fpsVal(){ return Math.max(1,Math.min(60, parseInt($('fpsInput').value)||12)); }
+function maxFramesVal(){ return Math.max(1,Math.min(2000, parseInt($('maxFramesInput').value)||300)); }
+function expectedFrames(){ const [s,e]=state.range; return e>s?Math.min(Math.ceil((e-s)*fpsVal()),maxFramesVal()):0; }
+function updateExtractHint(){
+  let txt='按当前时间范围和帧率提取视频帧';
+  if(state.videoSize) txt+=` · 原始分辨率 ${state.videoSize.w}×${state.videoSize.h}`;
+  const exp=expectedFrames();
+  if(exp>0) txt+=` · 预计提取 ${exp} 帧`;
+  $('extractHint').textContent=txt;
+}
+
+/* ---------- 时间范围双滑块 ---------- */
+const rangeCanvas=$('rangeCanvas');
+function drawRangeCanvas(){
+  const c=rangeCanvas, dpr=window.devicePixelRatio||1;
+  const w=c.clientWidth||900, h=42;
+  c.width=w*dpr; c.height=h*dpr; const ctx=c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  const max=state.duration>0?state.duration:300;
+  const xOf=t=> (t/max)*w;
+  ctx.fillStyle='#5a4f45'; ctx.fillRect(0,h/2-3,w,6);
+  ctx.fillStyle='#b55233'; ctx.fillRect(xOf(state.range[0]),h/2-3,xOf(state.range[1])-xOf(state.range[0]),6);
+  for(const t of state.range){ const x=xOf(t); ctx.fillStyle='#e8dcc8'; ctx.fillRect(x-4,8,8,h-16); }
+}
+let draggingHandle=null;
+function rangePointer(e){ const rect=rangeCanvas.getBoundingClientRect(); const x=e.clientX-rect.left; const max=state.duration>0?state.duration:300; return Math.max(0,Math.min(max,(x/rect.width)*max)); }
+rangeCanvas.addEventListener('pointerdown',e=>{ const t=rangePointer(e); const d0=Math.abs(t-state.range[0]), d1=Math.abs(t-state.range[1]); draggingHandle=d0<=d1?0:1; rangeCanvas.setPointerCapture(e.pointerId); });
+rangeCanvas.addEventListener('pointermove',e=>{
+  if(draggingHandle===null) return;
+  const t=rangePointer(e);
+  if(draggingHandle===0) state.range[0]=Math.min(t,state.range[1]); else state.range[1]=Math.max(t,state.range[0]);
+  state.rangeRef=[...state.range]; drawRangeCanvas(); updateRangeInfo();
+  const v=$('video'); if(draggingHandle===0) v.currentTime=state.range[0]; else v.currentTime=state.range[1];
+});
+rangeCanvas.addEventListener('pointerup',()=>draggingHandle=null);
+rangeCanvas.addEventListener('pointerleave',()=>draggingHandle=null);
+function updateRangeInfo(){
+  const [s,e]=state.range;
+  let txt=`${formatTime(s)} — ${formatTime(e)}`;
+  if(state.duration>0) txt+=` (总长 ${formatTime(state.duration)})`;
+  if(e>s) txt+=` · 时长 ${(e-s).toFixed(1)} 秒 · 约 ${Math.min(Math.ceil((e-s)*fpsVal()),maxFramesVal())} 帧`;
+  $('rangeInfo').textContent=txt;
+}
+
+/* 视频控制按钮 */
+$('replayBtn').addEventListener('click',()=>{ const v=$('video'); v.currentTime=state.range[0]; v.play(); });
+$('autoReplayBtn').addEventListener('click',()=>{
+  state.autoReplay=!state.autoReplay;
+  const b=$('autoReplayBtn');
+  b.classList.toggle('ghost',!state.autoReplay);
+  b.style.background=state.autoReplay?'var(--accent)':'transparent';
+});
+
+/* ---------- 裁剪 ---------- */
+function bindCropInput(id,key){
+  $(id).addEventListener('input',()=>{ state.crop[key]=Math.max(0,parseInt($(id).value)||0); updateCropResult(); });
+}
+bindCropInput('cropLeft','left'); bindCropInput('cropTop','top'); bindCropInput('cropRight','right'); bindCropInput('cropBottom','bottom');
+function updateCropResult(){
+  const {left,top,right,bottom}=state.crop; const vs=state.videoSize;
+  if(vs && (left>0||top>0||right>0||bottom>0)){
+    $('cropResult').classList.remove('hidden');
+    $('cropResult').textContent=`裁剪后尺寸: ${vs.w-left-right} × ${vs.h-top-bottom}`;
+    $('resetCropBtn').classList.remove('hidden');
+  } else { $('cropResult').classList.add('hidden'); $('resetCropBtn').classList.add('hidden'); }
+}
+$('resetCropBtn').addEventListener('click',()=>{ state.crop={left:0,top:0,right:0,bottom:0}; cropLeft.value=0;cropTop.value=0;cropRight.value=0;cropBottom.value=0; updateCropResult(); });
+$('cropManualBtn').addEventListener('click',openCropEditor);
+$('cropCloseBtn').addEventListener('click',()=>{ $('cropPrevWrap').classList.add('hidden'); $('cropCloseBtn').classList.add('hidden'); });
+function openCropEditor(){
+  const v=$('video'); if(!v||!state.videoUrl){ showMsg('视频尚未加载'); return; }
+  v.pause(); v.currentTime=state.range[0];
+  const onSeeked=()=>{ v.removeEventListener('seeked',onSeeked); captureCropPreview(); };
+  v.addEventListener('seeked',onSeeked,{once:true});
+}
+function captureCropPreview(){
+  const v=$('video'); if(!v||!state.videoSize||v.videoWidth===0) return;
+  const c=document.createElement('canvas'); c.width=v.videoWidth; c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  showCropEditor(c.toDataURL('image/png'));
+}
+function showCropEditor(dataUrl){
+  const wrap=$('cropPrevWrap'); wrap.classList.remove('hidden'); $('cropCloseBtn').classList.remove('hidden');
+  const vs=state.videoSize; const img=new Image();
+  img.onload=()=>{
+    wrap.innerHTML='';
+    const canvas=document.createElement('canvas'); canvas.width=vs.w; canvas.height=vs.h; canvas.style.maxWidth='100%'; canvas.style.cursor='crosshair'; canvas.style.display='block';
+    wrap.appendChild(canvas);
+    const ctx=canvas.getContext('2d'); const HANDLE=12; let dragging=null,startPos=null;
+    const hitTest=(vx,vy)=>{ const {left,top,right,bottom}=state.crop; const r=vs.w-left-right, b=vs.h-top-bottom, hs=HANDLE;
+      if(vx>=left-hs&&vx<=left+hs&&vy>=top-hs&&vy<=top+hs) return 'nw';
+      if(vx>=left+r-hs&&vx<=left+r+hs&&vy>=top-hs&&vy<=top+hs) return 'ne';
+      if(vx>=left-hs&&vx<=left+hs&&vy>=top+b-hs&&vy<=top+b+hs) return 'sw';
+      if(vx>=left+r-hs&&vx<=left+r+hs&&vy>=top+b-hs&&vy<=top+b+hs) return 'se';
+      if(vx>=left-hs&&vx<=left+hs&&vy>=top&&vy<=top+b) return 'w';
+      if(vx>=left+r-hs&&vx<=left+r+hs&&vy>=top&&vy<=top+b) return 'e';
+      if(vx>=left&&vx<=left+r&&vy>=top-hs&&vy<=top+hs) return 'n';
+      if(vx>=left&&vx<=left+r&&vy>=top+b-hs&&vy<=top+b+hs) return 's';
+      if(vx>=left&&vx<=left+r&&vy>=top&&vy<=top+b) return 'move';
+      return null; };
+    const toV=(cx,cy)=>{ const rect=canvas.getBoundingClientRect(); return {vx:Math.round((cx-rect.left)*vs.w/rect.width), vy:Math.round((cy-rect.top)*vs.h/rect.height)}; };
+    const redraw=()=>{ ctx.drawImage(img,0,0); const {left,top,right,bottom}=state.crop; const w=vs.w-left-right,h=vs.h-top-bottom;
+      ctx.fillStyle='rgba(0,0,0,.55)';
+      if(left>0) ctx.fillRect(0,0,left,vs.h); if(right>0) ctx.fillRect(vs.w-right,0,right,vs.h);
+      if(top>0) ctx.fillRect(left,0,w,top); if(bottom>0) ctx.fillRect(left,vs.h-bottom,w,bottom);
+      ctx.strokeStyle='#b55233'; ctx.lineWidth=2; ctx.strokeRect(left,top,w,h);
+      ctx.fillStyle='#b55233';
+      [[left,top],[left+w,top],[left+w,top+h],[left,top+h],[left+w/2,top],[left+w/2,top+h],[left,top+h/2],[left+w,top+h/2]].forEach(([x,y])=>ctx.fillRect(x-4,y-4,8,8)); };
+    const onMove=(e)=>{ const {vx,vy}=toV(e.clientX,e.clientY);
+      if(!dragging||!startPos){ canvas.style.cursor=({move:'grab',n:'n-resize',s:'s-resize',e:'e-resize',w:'w-resize',ne:'ne-resize',nw:'nw-resize',se:'se-resize',sw:'sw-resize'}[hitTest(vx,vy)]||'crosshair'); return; }
+      const dx=vx-startPos.x, dy=vy-startPos.y; let {left,top,right,bottom}=startPos;
+      if(dragging==='move'){ const w=vs.w-startPos.left-startPos.right,h=vs.h-startPos.top-startPos.bottom; left=Math.max(0,Math.min(vs.w-w-1,startPos.left+dx)); top=Math.max(0,Math.min(vs.h-h-1,startPos.top+dy)); right=vs.w-left-w; bottom=vs.h-top-h; }
+      else { if(dragging.includes('w')) left=Math.max(0,Math.min(vs.w-startPos.right-1,startPos.left+dx)); if(dragging.includes('e')) right=Math.max(0,Math.min(vs.w-startPos.left-1,startPos.right-dx)); if(dragging.includes('n')) top=Math.max(0,Math.min(vs.h-startPos.bottom-1,startPos.top+dy)); if(dragging.includes('s')) bottom=Math.max(0,Math.min(vs.h-startPos.top-1,startPos.bottom-dy)); }
+      state.crop={left,top,right,bottom}; cropLeft.value=left;cropTop.value=top;cropRight.value=right;cropBottom.value=bottom; updateCropResult(); redraw(); };
+    canvas.addEventListener('pointerdown',e=>{ const {vx,vy}=toV(e.clientX,e.clientY); dragging=hitTest(vx,vy); startPos={...state.crop}; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointermove',onMove);
+    canvas.addEventListener('pointerup',()=>{ dragging=null; startPos=null; });
+    canvas.addEventListener('pointerleave',()=>{ dragging=null; });
+    redraw();
+  };
+  img.src=dataUrl;
+}
+
+/* ================= 帧提取（移植自 extractFrames） ================= */
+$('extractBtn').addEventListener('click',extractFrames);
+async function extractFrames(){
+  const v=$('video');
+  if(!v||!state.videoUrl||state.range[1]<=state.range[0]){ showMsg('请先选择有效的时间范围'); return; }
+  if(v.videoWidth===0||v.videoHeight===0){ showMsg('视频尚未加载完成，请稍候再试'); return; }
+  const f=fpsVal(), mf=maxFramesVal();
+  const interval=1/f; const timestamps=[]; let ts=state.range[0];
+  while(ts<state.range[1] && timestamps.length<mf){ timestamps.push(ts); ts+=interval; }
+  if(timestamps.length===0){ showMsg('预计提取 0 帧，请调整范围/帧率'); return; }
+  const vw=v.videoWidth, vh=v.videoHeight; const {left,top,right,bottom}=state.crop;
+  const cropW=Math.max(1,vw-left-right), cropH=Math.max(1,vh-top-bottom);
+  const canvas=document.createElement('canvas'); canvas.width=cropW; canvas.height=cropH;
+  const ctx=canvas.getContext('2d'); if(!ctx){ showMsg('无法创建画布'); return; }
+  state.extractedFrames=[]; state.extractedFrameSize=null; state.duplicateMarkers=new Map();
+  $('extractProgress').classList.remove('hidden'); setProgress('extractProgress',0);
+  const seekAndCapture=(t)=>new Promise((resolve,reject)=>{
+    const doCapture=()=>{ try{
+      ctx.drawImage(v, left,top,cropW,cropH, 0,0,cropW,cropH);
+      const dataUrl=canvas.toDataURL('image/png');
+      canvas.toBlob(b=>{ if(b&&b.size>0) resolve({blob:b,dataUrl}); else reject(new Error('ERR_TOBLOB')); },'image/png',0.95);
+    }catch(err){ reject(err); } };
+    const onSeeked=()=>{ v.removeEventListener('seeked',onSeeked); v.removeEventListener('error',onError); requestAnimationFrame(()=>requestAnimationFrame(doCapture)); };
+    const onError=()=>{ v.removeEventListener('seeked',onSeeked); v.removeEventListener('error',onError); reject(new Error('ERR_VIDEO_SEEK')); };
+    v.addEventListener('seeked',onSeeked,{once:true}); v.addEventListener('error',onError,{once:true}); v.currentTime=t;
+  });
+  try{
+    v.pause();
+    await new Promise(res=>{ const onL=()=>{v.removeEventListener('loadeddata',onL);res();}; if(v.readyState>=2)res(); else v.addEventListener('loadeddata',onL,{once:true}); });
+    const frames=[];
+    for(let i=0;i<timestamps.length;i++){ const {blob,dataUrl}=await seekAndCapture(timestamps[i]); frames.push({blob,dataUrl,timestamp:timestamps[i]}); setProgress('extractProgress',Math.round(((i+1)/timestamps.length)*100)); }
+    state.extractedFrames=frames; state.frameSelected=frames.map(()=>true); state.extractedFrameSize={w:cropW,h:cropH}; state.mattedFrames=[];
+    const markers=await analyzeDuplicateFrames(frames); state.duplicateMarkers=markers;
+    $('downloadFramesBtn').classList.remove('hidden'); renderAfterExtract();
+    const dup=markers.size;
+    if(dup>0){ const groups=new Set([...markers.values()].map(x=>x.groupId)).size; showMsg(`已提取 ${frames.length} 帧，发现 ${dup} 处重复 (${groups} 组)`); }
+    else showMsg(`已提取 ${frames.length} 帧`);
+  }catch(err){ showMsg('提取帧失败: '+err.message); }
+  finally{ $('extractProgress').classList.add('hidden'); }
+}
+
+/* ================= 重复帧检测（移植自 analyzeDuplicateFrames） ================= */
+function imageFingerprint(dataUrl){ return new Promise((resolve,reject)=>{ const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); c.width=img.width;c.height=img.height; const ctx=c.getContext('2d'); ctx.drawImage(img,0,0); const d=ctx.getImageData(0,0,c.width,c.height).data; let h1=0,h2=0; for(let i=0;i<d.length;i+=16){ h1=((h1<<5)-h1+d[i]+d[i+1]+d[i+2]+d[i+3])|0; h2=((h2<<3)+h2+d[i+4]+d[i+5]+d[i+6]+d[i+7])|0; } resolve(`${h1}_${h2}`); }; img.onerror=()=>reject(new Error('ERR')); img.src=dataUrl; }); }
+async function analyzeDuplicateFrames(frames){
+  const hashes=[]; for(let i=0;i<frames.length;i++) hashes[i]=await imageFingerprint(frames[i].dataUrl);
+  const map=new Map(); hashes.forEach((h,i)=>{ const l=map.get(h)||[]; l.push(i); map.set(h,l); });
+  const result=new Map(); let gid=0;
+  map.forEach(indices=>{ if(indices.length>1){ indices.forEach(i=>result.set(i,{groupId:gid,totalInGroup:indices.length})); gid++; } });
+  return result;
+}
+
+/* ================= 渲染：帧缩略图 + 动画预览 ================= */
+function selectedIndices(){ return state.extractedFrames.map((_,i)=>i).filter(i=>state.frameSelected[i]); }
+function renderAfterExtract(){
+  $('afterExtract').classList.remove('hidden'); $('exportSection').classList.add('hidden');
+  const grid=$('thumbGrid'); grid.innerHTML='';
+  state.extractedFrames.forEach((f,i)=>{
+    const sel=state.frameSelected[i]; const dup=state.duplicateMarkers.get(i);
+    const div=document.createElement('div'); div.className='thumb'+(dup?' dup':'');
+    div.innerHTML=`
+      ${dup?`<div class="dupbadge">重复×${dup.totalInGroup}</div>`:''}
+      <div class="chk"><input type="checkbox" ${sel?'checked':''} data-i="${i}"></div>
+      <img src="${f.dataUrl}" alt="帧 ${i+1}">
+      <div class="lbl">帧 ${i+1}</div>`;
+    div.querySelector('input').addEventListener('change',e=>{ state.frameSelected[i]=e.target.checked; updateSelectTitle(); });
+    grid.appendChild(div);
+  });
+  updateSelectTitle();
+  if(state.extractedFrames[0]){ const oi=$('origImg'); oi.src=state.extractedFrames[0].dataUrl; oi.onclick=(e)=>pickColorFromImage(oi,e); }
+  renderAnimPreview();
+}
+function updateSelectTitle(){ const n=state.frameSelected.filter(Boolean).length; $('selectTitle').textContent=`选择要处理的帧 (${n}/${state.extractedFrames.length})`; }
+$('selAll').addEventListener('click',()=>{ state.frameSelected=state.extractedFrames.map(()=>true); renderAfterExtract(); });
+$('selNone').addEventListener('click',()=>{ state.frameSelected=state.extractedFrames.map(()=>false); renderAfterExtract(); });
+
+let animRemoved=false;
+function renderAnimPreview(){
+  const host=$('animPreview'); const sel=selectedIndices();
+  if(sel.length===0){ host.innerHTML=''; return; }
+  const fps=fpsVal();
+  host.innerHTML=`
+    <div style="margin-top:16px;margin-bottom:16px;">
+      <h3 class="ttl">帧动画预览</h3>
+      <div class="animbox">
+        <div style="max-width:480px;max-height:360px;margin:0 auto 12px;background:#ede6dc;border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+          <img id="animImg" class="animimg" alt="帧预览">
+        </div>
+        <div style="margin-bottom:4px;"><span class="kv">第 <span id="animCur">1</span> / ${sel.length} 帧</span></div>
+        <input type="range" id="animSlider" min="0" max="${sel.length-1}" value="0" style="width:100%;">
+        <div class="pillrow" style="margin-top:8px;justify-content:center;">
+          <button class="btn mini" id="aFirst">第一帧</button>
+          <button class="btn mini" id="aPrev">上一帧</button>
+          <button class="btn mini" id="aNext">下一帧</button>
+          <button class="btn mini" id="aLast">最后帧</button>
+          <button class="btn mini" id="aPlay">播放</button>
+          <label class="inline"><input type="checkbox" id="aLoop" checked> 循环播放</label>
+        </div>
+        <div class="inline" style="margin-top:12px;justify-content:center;">
+          <span class="kv">预览速度</span>
+          <input type="range" id="aSpeed" min="0.25" max="4" step="0.25" value="1" style="width:120px;">
+          <span class="kv" id="aSpeedVal">1×</span>
+        </div>
+      </div>
+    </div>`;
+  const img=$('animImg'), slider=$('animSlider');
+  let timer=null;
+  const draw=()=>{ const idx=sel[animState.currentIdx]??0; img.src=state.extractedFrames[idx].dataUrl; $('animCur').textContent=animState.currentIdx+1; slider.value=animState.currentIdx; };
+  const baseSpeed=fps<=12?1000/fps:1000/12;
+  const tick=()=>{ const speed=Math.max(50,baseSpeed/animState.speed); clearInterval(timer); if(animState.playing) timer=setInterval(()=>{ animState.currentIdx++; if(animState.currentIdx>=sel.length){ if(!animState.loop){animState.playing=false;$('aPlay').textContent='播放';} animState.currentIdx=animState.loop?0:sel.length-1; } draw(); },speed); };
+  slider.oninput=()=>{ animState.currentIdx=+slider.value; animState.playing=false; $('aPlay').textContent='播放'; draw(); };
+  $('aFirst').onclick=()=>{animState.currentIdx=0;animState.playing=false;$('aPlay').textContent='播放';draw();};
+  $('aPrev').onclick=()=>{animState.currentIdx=Math.max(0,animState.currentIdx-1);animState.playing=false;$('aPlay').textContent='播放';draw();};
+  $('aNext').onclick=()=>{animState.currentIdx=Math.min(sel.length-1,animState.currentIdx+1);animState.playing=false;$('aPlay').textContent='播放';draw();};
+  $('aLast').onclick=()=>{animState.currentIdx=sel.length-1;animState.playing=false;$('aPlay').textContent='播放';draw();};
+  $('aPlay').onclick=()=>{animState.playing=!animState.playing;$('aPlay').textContent=animState.playing?'暂停':'播放';tick();};
+  $('aLoop').onchange=e=>{animState.loop=e.target.checked;};
+  $('aSpeed').oninput=e=>{animState.speed=+e.target.value;$('aSpeedVal').textContent=animState.speed+'×';tick();};
+  if(adHandlerRef) document.removeEventListener('keydown',adHandlerRef);
+  adHandlerRef=function adHandler(e){
+    const tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
+    if(e.key==='a'||e.key==='A'){ animState.currentIdx=Math.max(0,animState.currentIdx-1); animState.playing=false;$('aPlay').textContent='播放'; draw(); }
+    if(e.key==='d'||e.key==='D'){ animState.currentIdx=Math.min(sel.length-1,animState.currentIdx+1); animState.playing=false;$('aPlay').textContent='播放'; draw(); }
+  };
+  document.addEventListener('keydown',adHandlerRef);
+  animState.currentIdx=0; draw(); animState.playing=false;
+}
+const animState={playing:false,currentIdx:0,loop:true,speed:1};
+let adHandlerRef=null;
+
+/* ================= 抠图 ChromaKey（移植自 applyChromaKey） ================= */
+/* 从四角采样自动检测背景色（取中位数，抗噪） */
+function detectBgColor(dataUrl){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const w=img.width,h=img.height;
+      const c=document.createElement('canvas'); c.width=w;c.height=h; const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0);
+      const S=Math.max(2,Math.round(Math.min(w,h)*0.06));
+      const blocks=[[0,0],[w-S,0],[0,h-S],[w-S,h-S]];
+      const rs=[],gs=[],bs=[];
+      for(const [bx,by] of blocks){ const dd=ctx.getImageData(bx,by,S,S).data; for(let i=0;i<dd.length;i+=4){ rs.push(dd[i]);gs.push(dd[i+1]);bs.push(dd[i+2]); } }
+      const med=a=>{ a.sort((x,y)=>x-y); return a[a.length>>1]; };
+      resolve([med(rs),med(gs),med(bs)]);
+    };
+    img.onerror=()=>reject(new Error('ERR_IMAGE_LOAD'));
+    img.src=dataUrl;
+  });
+}
+/* 优化版色度键抠图：
+   - edgeOnly：只移除与图像边界连通的背景（flood-fill），避免主体内部同色区域被挖穿；
+   - despill：对半透明边缘做去杂色，消除绿边/蓝边；
+   - 距离羽化：容差外 feather 区间做 alpha 平滑过渡。 */
+function applyChromaKey(dataUrl,bgR,bgG,bgB,tolerance,feather,opts){
+  opts=opts||{}; const edgeOnly=opts.edgeOnly!==false; const despill=opts.despill!==false;
+  return new Promise((resolve,reject)=>{
+    const img=new Image(); img.crossOrigin='anonymous';
+    img.onload=()=>{
+      const w=img.width,h=img.height,N=w*h;
+      const c=document.createElement('canvas'); c.width=w;c.height=h;
+      const ctx=c.getContext('2d'); if(!ctx) return reject(new Error('ERR'));
+      ctx.drawImage(img,0,0);
+      const id=ctx.getImageData(0,0,w,h); const d=id.data;
+      const outer=tolerance+feather;
+      // 1) 背景候选：与背景色距离 <= outer
+      const isCand=new Uint8Array(N);
+      for(let p=0;p<N;p++){ const i=p*4; const dr=d[i]-bgR,dg=d[i+1]-bgG,db=d[i+2]-bgB; if(Math.sqrt(dr*dr+dg*dg+db*db)<=outer) isCand[p]=1; }
+      // 2) 确定真正要移除的背景掩码
+      let bgMask;
+      if(edgeOnly){
+        bgMask=new Uint8Array(N); const stack=[];
+        for(let x=0;x<w;x++){ const t=x,b=(h-1)*w+x; if(isCand[t]&&!bgMask[t]){bgMask[t]=1;stack.push(t);} if(isCand[b]&&!bgMask[b]){bgMask[b]=1;stack.push(b);} }
+        for(let y=0;y<h;y++){ const l=y*w,r=y*w+w-1; if(isCand[l]&&!bgMask[l]){bgMask[l]=1;stack.push(l);} if(isCand[r]&&!bgMask[r]){bgMask[r]=1;stack.push(r);} }
+        while(stack.length){ const p=stack.pop(); const x=p%w,y=(p/w)|0;
+          if(x>0){const q=p-1; if(isCand[q]&&!bgMask[q]){bgMask[q]=1;stack.push(q);}}
+          if(x<w-1){const q=p+1; if(isCand[q]&&!bgMask[q]){bgMask[q]=1;stack.push(q);}}
+          if(y>0){const q=p-w; if(isCand[q]&&!bgMask[q]){bgMask[q]=1;stack.push(q);}}
+          if(y<h-1){const q=p+w; if(isCand[q]&&!bgMask[q]){bgMask[q]=1;stack.push(q);}}
+        }
+      } else bgMask=isCand;
+      // 3) 背景主导通道（用于去杂色）
+      const mx=Math.max(bgR,bgG,bgB); const dom=(bgG===mx)?1:((bgB===mx)?2:0);
+      // 4) 逐像素设 alpha + 去杂色
+      for(let p=0;p<N;p++){
+        if(!bgMask[p]) continue;
+        const i=p*4; const dr=d[i]-bgR,dg=d[i+1]-bgG,db=d[i+2]-bgB; const dist=Math.sqrt(dr*dr+dg*dg+db*db);
+        let a;
+        if(dist<=tolerance) a=0;
+        else if(feather>0 && dist<outer) a=Math.round(255*Math.min(1,(dist-tolerance)/feather));
+        else a=255;
+        if(a<d[i+3]) d[i+3]=a;
+        if(despill && a>0 && a<255){ // 半透明边缘去杂色：压低背景主导通道
+          const o1=d[i+((dom+1)%3)], o2=d[i+((dom+2)%3)]; const cap=Math.round((o1+o2)/2);
+          if(d[i+dom]>cap) d[i+dom]=cap;
+        }
+      }
+      ctx.putImageData(id,0,0);
+      const resultDataUrl=c.toDataURL('image/png');
+      c.toBlob(b=>b?resolve({blob:b,dataUrl:resultDataUrl}):reject(new Error('ERR')),'image/png',0.95);
+    };
+    img.onerror=()=>reject(new Error('ERR_IMAGE_LOAD'));
+    img.src=dataUrl;
+  });
+}
+function applyBrushMask(baseDataUrl,maskDataUrl){
+  return new Promise((resolve,reject)=>{
+    const base=new Image(), mask=new Image();
+    base.onload=()=>{ mask.onload=()=>{
+      const c=document.createElement('canvas'); c.width=base.width;c.height=base.height; const ctx=c.getContext('2d');
+      ctx.drawImage(base,0,0); ctx.globalCompositeOperation='destination-out'; ctx.drawImage(mask,0,0); ctx.globalCompositeOperation='source-over';
+      const dataUrl=c.toDataURL('image/png'); c.toBlob(b=>b?resolve({blob:b,dataUrl}):reject(new Error('ERR')),'image/png',0.95);
+    }; mask.onerror=()=>reject(new Error('ERR')); mask.src=maskDataUrl; };
+    base.onerror=()=>reject(new Error('ERR')); base.src=baseDataUrl;
+  });
+}
+
+/* 抠图 UI 事件 */
+$('bgColor').addEventListener('input',e=>{ $('bgHex').textContent=e.target.value; });
+$('tolerance').addEventListener('input',e=>{ $('tolVal').textContent=e.target.value; });
+$('feather').addEventListener('input',e=>{ $('featherVal').textContent=e.target.value; });
+$('autoBgBtn').addEventListener('click',async()=>{
+  const pf=state.extractedFrames[selectedIndices()[0]??0]; if(!pf){ showMsg('请先提取并选择帧'); return; }
+  try{ const [r,g,b]=await detectBgColor(pf.dataUrl); const hex='#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+    $('bgColor').value=hex; $('bgHex').textContent=hex; showMsg('已自动检测背景色 '+hex.slice(1)+'，点「更新预览」查看'); runMattePreview(); }
+  catch(err){ showMsg('检测失败: '+err.message); }
+});
+function matteOpts(){ return {edgeOnly:$('edgeOnly').checked, despill:$('despill').checked}; }
+function pickColorFromImage(img,e){
+  const rect=img.getBoundingClientRect();
+  const c=document.createElement('canvas'); c.width=img.naturalWidth;c.height=img.naturalHeight; const ctx=c.getContext('2d');
+  const t=new Image(); t.onload=()=>{ ctx.drawImage(t,0,0); const x=Math.floor((e.clientX-rect.left)/rect.width*img.naturalWidth); const y=Math.floor((e.clientY-rect.top)/rect.height*img.naturalHeight); const [r,g,b]=ctx.getImageData(x,y,1,1).data; const hex='#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''); $('bgColor').value=hex; $('bgHex').textContent=hex; showMsg('已选取背景色 '+hex.slice(1)); }; t.src=img.src;
+}
+$('updatePreviewBtn').addEventListener('click',runMattePreview);
+function runMattePreview(){
+  const pf=state.extractedFrames[selectedIndices()[0]??0]; if(!pf) return;
+  const rgb=hexToRgb($('bgColor').value); if(!rgb) return;
+  applyChromaKey(pf.dataUrl,rgb[0],rgb[1],rgb[2],+$('tolerance').value,+$('feather').value,matteOpts()).then(r=>{ state.mattePreviewUrl=r.dataUrl; state.brushMaskDataUrl=null; renderMattePreview(); });
+}
+function renderMattePreview(){
+  const host=$('mattePrevInner');
+  if(!state.mattePreviewUrl){ host.innerHTML='<div style="text-align:center;padding:40px;color:#6b5d4d;">点击原图取色或选择颜色后点击「更新预览」</div>'; return; }
+  host.innerHTML='';
+  const stage=document.createElement('div'); stage.className='brush-stage'; stage.id='brushStage';
+  const disp=document.createElement('canvas'); disp.id='brushDisp'; stage.appendChild(disp);
+  const mask=document.createElement('canvas'); mask.id='brushMask'; mask.style.position='absolute'; mask.style.left='-9999px'; stage.appendChild(mask);
+  host.appendChild(stage);
+  const toggleBtn=$('bgToggleBtn'); toggleBtn.classList.remove('hidden');
+  toggleBtn.onclick=()=>{ state.mattePreviewBgSolid=!state.mattePreviewBgSolid; stage.style.background=state.mattePreviewBgSolid?'#a63d2e':'repeating-conic-gradient(#c9bfb0 0% 25%, #e4dbcf 0% 50%) 50% / 16px 16px'; toggleBtn.textContent=state.mattePreviewBgSolid?'透明网格':'纯色背景'; };
+  stage.style.background=state.mattePreviewBgSolid?'#a63d2e':'repeating-conic-gradient(#c9bfb0 0% 25%, #e4dbcf 0% 50%) 50% / 16px 16px';
+  const base=new Image(); base.onload=()=>{
+    const w=base.width,h=base.height; disp.width=w;disp.height=h; mask.width=w;mask.height=h; disp.getContext('2d').drawImage(base,0,0);
+    let drawing=false,last=null,brush=20;
+    const toC=(cx,cy)=>{ const r=stage.getBoundingClientRect(); return {x:Math.round((cx-r.left)*w/r.width),y:Math.round((cy-r.top)*h/r.height)}; };
+    const redraw=()=>{ const dctx=disp.getContext('2d'); dctx.drawImage(base,0,0); dctx.globalCompositeOperation='destination-out'; dctx.drawImage(mask,0,0); dctx.globalCompositeOperation='source-over'; };
+    const stroke=(x,y)=>{ const mctx=mask.getContext('2d'); mctx.fillStyle='rgba(255,255,255,0.9)'; mctx.beginPath(); mctx.arc(x,y,brush/2,0,Math.PI*2); mctx.fill(); redraw(); state.brushMaskDataUrl=mask.toDataURL('image/png'); };
+    stage.addEventListener('pointerdown',e=>{ stage.setPointerCapture(e.pointerId); drawing=true; const p=toC(e.clientX,e.clientY); last=p; stroke(p.x,p.y); });
+    stage.addEventListener('pointermove',e=>{ if(!drawing)return; const p=toC(e.clientX,e.clientY); const mctx=mask.getContext('2d'); mctx.strokeStyle='rgba(255,255,255,0.9)'; mctx.lineWidth=brush; mctx.lineCap='round'; mctx.beginPath(); mctx.moveTo(last.x,last.y); mctx.lineTo(p.x,p.y); mctx.stroke(); redraw(); last=p; state.brushMaskDataUrl=mask.toDataURL('image/png'); });
+    stage.addEventListener('pointerup',()=>{ drawing=false; last=null; });
+    stage.addEventListener('pointerleave',()=>{ drawing=false; });
+  };
+  base.src=state.mattePreviewUrl;
+}
+$('startMatteBtn').addEventListener('click',startMatting);
+async function startMatting(){
+  const sel=selectedIndices(); if(sel.length===0){ showMsg('请先选择要抠图的帧'); return; }
+  const rgb=hexToRgb($('bgColor').value); if(!rgb){ showMsg('请选择背景颜色'); return; }
+  const tol=+$('tolerance').value, fea=+$('feather').value;
+  state.mattedFrames=[]; $('matteProgress').classList.remove('hidden'); setProgress('matteProgress',0);
+  try{
+    const results=[];
+    const mo=matteOpts();
+    for(let i=0;i<sel.length;i++){ const idx=sel[i]; const frame=state.extractedFrames[idx]; let r=await applyChromaKey(frame.dataUrl,rgb[0],rgb[1],rgb[2],tol,fea,mo); if(state.brushMaskDataUrl) r=await applyBrushMask(r.dataUrl,state.brushMaskDataUrl); results.push(r); setProgress('matteProgress',Math.round(((i+1)/sel.length)*100)); }
+    state.mattedFrames=results;
+    const fs=state.extractedFrameSize||state.videoSize; if(fs&&results.length>0){ $('targetW').value=fs.w; $('targetH').value=fs.h; }
+    $('mattedTitle').textContent=`抠图处理后的帧 (${results.length})`;
+    renderMatted(); showMsg(`抠图完成，共 ${results.length} 帧`);
+  }catch(err){ showMsg('抠图失败: '+err.message); }
+  finally{ $('matteProgress').classList.add('hidden'); }
+}
+$('skipMatteBtn').addEventListener('click',skipMatting);
+function skipMatting(){
+  const sel=selectedIndices(); if(sel.length===0){ showMsg('请先选择要抠图的帧'); return; }
+  const results=sel.map(idx=>({blob:state.extractedFrames[idx].blob,dataUrl:state.extractedFrames[idx].dataUrl}));
+  state.mattedFrames=results;
+  const fs=state.extractedFrameSize||state.videoSize; if(fs&&results.length>0){ $('targetW').value=fs.w; $('targetH').value=fs.h; }
+  $('mattedTitle').textContent=`抠图处理后的帧 (${results.length})`;
+  renderMatted(); showMsg(`已跳过抠图（${results.length} 帧），可继续导出雪碧图`);
+}
+function renderMatted(){
+  $('mattedSection').classList.remove('hidden');
+  const grid=$('mattedGrid'); grid.innerHTML='';
+  state.mattedFrames.forEach((f,i)=>{
+    const div=document.createElement('div'); div.className='thumb';
+    div.innerHTML=`<img src="${f.dataUrl}" alt="抠图 ${i+1}" style="background:repeating-conic-gradient(#b8a898 0% 25%, #ede6dc 0% 50%) 50% / 12px 12px;"><div class="lbl">抠图 #${i+1}</div>`;
+    grid.appendChild(div);
+  });
+  setupExport();
+}
+
+/* ================= 导出参数 ================= */
+function setupExport(){
+  $('exportSection').classList.remove('hidden');
+  const fs=state.extractedFrameSize||state.videoSize||{w:256,h:256};
+  const ar=fs.w/fs.h;
+  const cols=Math.min(12,Math.max(4,Math.ceil(Math.sqrt(state.mattedFrames.length))));
+  $('columns').value=cols; $('padding').value=0; $('spacing').value=0; $('targetW').value=fs.w; $('targetH').value=fs.h;
+  const presets=[64,128,256,512].map(bw=>[bw,Math.max(32,Math.round(bw/ar))]);
+  const pc=$('sizePresets'); pc.innerHTML='';
+  presets.forEach(([w,h])=>{ const b=document.createElement('button'); b.className='btn ghost'; b.textContent=`${w} × ${h}`; b.onclick=()=>{ $('targetW').value=w; $('targetH').value=h; updateSizeInfo(); }; pc.appendChild(b); });
+  updateSizeInfo();
+  $('targetW').oninput=()=>{ const w=+$('targetW').value; if(w&&fs.h>0){ $('targetH').value=Math.round(w/(fs.w/fs.h)); } updateSizeInfo(); };
+  $('targetH').oninput=()=>{ const h=+$('targetH').value; if(h&&fs.w>0){ $('targetW').value=Math.round(h*(fs.w/fs.h)); } updateSizeInfo(); };
+  $('columns').oninput=updateSizeInfo;
+}
+function updateSizeInfo(){
+  const fs=state.extractedFrameSize||state.videoSize||{w:256,h:256};
+  $('singleSize').textContent=`单帧尺寸: ${fs.w} × ${fs.h}`;
+  $('aspectRatio').textContent=`长宽比: ${(fs.w/fs.h).toFixed(2)} : 1`;
+  const cols=Math.max(1,+$('columns').value||4);
+  $('rowsCount').textContent=`预计行数: ${Math.ceil(state.mattedFrames.length/cols)}`;
+}
+
+/* ================= 合成 Sprite Sheet（移植自 composeSpriteSheetClient + resizeFrameToCanvas） ================= */
+function resizeFrameToCanvas(img,targetW,targetH,padding){
+  const c=document.createElement('canvas'); c.width=targetW;c.height=targetH; const ctx=c.getContext('2d');
+  const innerW=targetW-padding*2, innerH=targetH-padding*2;
+  const scale=Math.min(innerW/img.width,innerH/img.height,1);
+  const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+  const x=padding+(innerW-w)/2, y=padding+(innerH-h)/2;
+  ctx.clearRect(0,0,targetW,targetH); ctx.drawImage(img,x,y,w,h); return c;
+}
+function composeSpriteSheetClient(frames,timestamps,targetW,targetH,padding,spacing,columns,bg){
+  return new Promise((resolve,reject)=>{
+    const cols=Math.max(1,columns); const rows=Math.ceil(frames.length/cols);
+    const sheetW=cols*(targetW+spacing)-spacing, sheetH=rows*(targetH+spacing)-spacing;
+    const sheet=document.createElement('canvas'); sheet.width=sheetW;sheet.height=sheetH; const ctx=sheet.getContext('2d');
+    const bgMode=(bg&&bg.mode==='color')?'color':'transparent';
+    const bgColor=(bg&&bg.color)||'#ffffff';
+    if(bgMode==='color'){ ctx.fillStyle=bgColor; ctx.fillRect(0,0,sheetW,sheetH); }
+    else ctx.clearRect(0,0,sheetW,sheetH);
+    const index=[]; let loaded=0;
+    frames.forEach((f,i)=>{
+      const img=new Image();
+      img.onload=()=>{
+        const resized=resizeFrameToCanvas(img,targetW,targetH,padding);
+        const col=i%cols, row=Math.floor(i/cols);
+        const x=col*(targetW+spacing), y=row*(targetH+spacing);
+        ctx.drawImage(resized,x,y,targetW,targetH);
+        index.push({i,x,y,w:targetW,h:targetH,t:Math.round((timestamps[i]??0)*1000)/1000});
+        loaded++;
+        if(loaded===frames.length){ sheet.toBlob(b=>{ if(b) resolve({pngBlob:b,index:{version:'1.0',frame_size:{w:targetW,h:targetH},sheet_size:{w:sheetW,h:sheetH},frames:index}}); else reject(new Error('ERR_EXPORT')); },'image/png',0.95); }
+      };
+      img.onerror=()=>reject(new Error('ERR_FRAME_LOAD'));
+      img.src=f.dataUrl;
+    });
+  });
+}
+
+/* 内描边（移植自 applyInnerStroke，距离变换） */
+function applyInnerStroke(blob,strokeWidth,strokeColor){
+  if(strokeWidth<=0) return Promise.resolve(blob);
+  return new Promise((resolve,reject)=>{
+    const img=new Image(); img.onload=()=>{
+      const w=img.width,h=img.height; const c=document.createElement('canvas'); c.width=w;c.height=h; const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0); const id=ctx.getImageData(0,0,w,h); const d=id.data;
+      const m=strokeColor.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+      const sr=m?parseInt(m[1],16):0,sg=m?parseInt(m[2],16):0,sb=m?parseInt(m[3],16):0;
+      const aT=5, INF=0xffff, total=w*h, dist=new Uint16Array(total);
+      const YB=8000, yield_=()=>new Promise(r=>setTimeout(r,0));
+      (async()=>{
+        for(let i=0;i<total;i+=YB){ const e=Math.min(i+YB,total); for(let j=i;j<e;j++) dist[j]=d[j*4+3]<=aT?0:INF; if(e<total) await yield_(); }
+        const q=[]; for(let i=0;i<total;i++) if(dist[i]===0) q.push(i);
+        const dx=[-1,-1,-1,0,0,1,1,1], dy=[-1,0,1,-1,1,-1,0,1];
+        while(q.length>0){ let proc=0; while(q.length>0&&proc<YB){ const idx=q.shift(); const dd=dist[idx]; const x=idx%w,y=(idx/w)|0; for(let k=0;k<8;k++){ const nx=x+dx[k],ny=y+dy[k]; if(nx<0||nx>=w||ny<0||ny>=h) continue; const ni=ny*w+nx; if(dist[ni]!==INF) continue; dist[ni]=dd+1; q.push(ni); } proc++; } if(q.length>0) await yield_(); }
+        const stroked=new Uint8Array(total);
+        for(let i=0;i<total;i+=YB){ const e=Math.min(i+YB,total); for(let j=i;j<e;j++){ const dd=dist[j]; if(dd>=1&&dd<=strokeWidth){ d[j*4]=sr;d[j*4+1]=sg;d[j*4+2]=sb;d[j*4+3]=255; stroked[j]=1; } } if(e<total) await yield_(); }
+        for(let y=1;y<h-1;y++){ for(let x=1;x<w-1;x++){ const i=y*w+x; const a=d[i*4+3]; if(a>0&&a<=aT){ for(let k=0;k<8;k++){ const ni=(y+dy[k])*w+(x+dx[k]); if(stroked[ni]){ d[i*4]=sr;d[i*4+1]=sg;d[i*4+2]=sb;d[i*4+3]=255; break; } } } } if(y%32===0) await yield_(); }
+        ctx.putImageData(id,0,0); c.toBlob(b=>b?resolve(b):reject(new Error('ERR')),'image/png',0.95);
+      })();
+    };
+    img.onerror=()=>reject(new Error('ERR_IMAGE_LOAD'));
+    img.src=URL.createObjectURL(blob);
+  });
+}
+function blobResize(blob,tw,th,pad){ return new Promise((resolve,reject)=>{ const img=new Image(); img.onload=()=>resolve(resizeFrameToCanvas(img,tw,th,pad)); img.onerror=()=>reject(new Error('ERR')); img.src=URL.createObjectURL(blob); }); }
+
+/* ================= 导出 Sprite Sheet ================= */
+$('exportBtn').addEventListener('click',exportSpriteSheet);
+async function exportSpriteSheet(){
+  if(state.mattedFrames.length===0) return;
+  const targetW=+$('targetW').value||256, targetH=+$('targetH').value||256;
+  const padding=+$('padding').value||0, spacing=+$('spacing').value||0, columns=+$('columns').value||4;
+  const bgMode=document.querySelector('input[name="bgMode"]:checked').value;
+  const bg={mode:bgMode,color:bgMode==='color'?$('exportBgColor').value:'#ffffff'};
+  const sel=selectedIndices();
+  const timestamps=sel.map(idx=>state.extractedFrames[idx]?.timestamp??0);
+  // mattedFrames 是按 selectedIndices() 顺序生成的，故按位置一一对应
+  const mats=sel.map((_,pos)=>state.mattedFrames[pos]);
+  $('exportBtn').disabled=true;
+  try{
+    const {pngBlob,index}=await composeSpriteSheetClient(mats,timestamps,targetW,targetH,padding,spacing,columns,bg);
+    $('exportPrev').style.background=bgMode==='transparent'?"repeating-conic-gradient(#c9bfb0 0% 25%, #e4dbcf 0% 50%) 50% / 16px 16px":"";
+    state.exportedPreview={rawPngBlob:pngBlob,index,params:{targetW,targetH,padding,spacing,columns,timestamps,bg},mats};
+    if(state.displayPngUrl) URL.revokeObjectURL(state.displayPngUrl);
+    state.displayPngUrl=URL.createObjectURL(pngBlob); state.displayedPngBlob=pngBlob;
+    $('exportImg').src=state.displayPngUrl;
+    $('exportResult').classList.remove('hidden');
+    $('exportResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+    showMsg('已生成 Sprite Sheet，可预览后下载');
+  }catch(err){ showMsg('导出失败: '+err.message); }
+  finally{ $('exportBtn').disabled=false; }
+}
+/* 内描边应用 */
+$('applyStrokeBtn').addEventListener('click',applyStrokeAndGenerate);
+async function applyStrokeAndGenerate(){
+  if(!state.exportedPreview) return;
+  const sw=Math.max(0,+$('strokeWidth').value||0), sc=$('strokeColor').value;
+  const {rawPngBlob,params,mats}=state.exportedPreview;
+  $('strokeSpin').classList.remove('hidden');
+  try{
+    let blob;
+    if(sw>0){ const {targetW,targetH,padding,spacing,columns,timestamps,bg}=params; const stroked=[];
+      for(let i=0;i<mats.length;i++){ const resized=await blobResize(mats[i].blob,targetW,targetH,padding); stroked.push(await applyInnerStroke(resized,sw,sc)); }
+      const frames=stroked.map(b=>({blob:b,dataUrl:URL.createObjectURL(b)}));
+      const {pngBlob}=await composeSpriteSheetClient(frames,timestamps,targetW,targetH,padding,spacing,columns,bg);
+      blob=pngBlob;
+    } else blob=rawPngBlob;
+    if(state.displayPngUrl) URL.revokeObjectURL(state.displayPngUrl);
+    state.displayPngUrl=URL.createObjectURL(blob); state.displayedPngBlob=blob; $('exportImg').src=state.displayPngUrl;
+    showMsg(sw>0?'已应用描边':'已还原为原图');
+  }catch(err){ showMsg('应用描边失败: '+err.message); }
+  finally{ $('strokeSpin').classList.add('hidden'); }
+}
+
+/* ================= 导出背景选项联动 ================= */
+function syncBgControls(){
+  const mode=document.querySelector('input[name="bgMode"]:checked').value;
+  $('exportBgColor').style.visibility=mode==='color'?'visible':'hidden';
+}
+document.querySelectorAll('input[name="bgMode"]').forEach(r=>r.addEventListener('change',syncBgControls));
+$('exportBgColor').addEventListener('input',e=>{ $('exportBgHex').textContent=e.target.value; });
+syncBgControls();
+
+/* ================= 下载 ================= */
+function downloadBlob(blob,name){ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(url),2000); }
+
+/* 内置 ZIP 写入（store 方式 + CRC32），无需外部依赖，可离线使用 */
+function crc32(buf){
+  let crc=~0;
+  for(let i=0;i<buf.length;i++){ crc^=buf[i]; for(let k=0;k<8;k++) crc=(crc>>>1)^(0xEDB88320 & -(crc&1)); }
+  return (~crc)>>>0;
+}
+async function makeZip(files){ // files: [{name, blob}]
+  const enc=new TextEncoder(); const chunks=[]; let offset=0; const central=[];
+  for(const f of files){
+    const data=new Uint8Array(await f.blob.arrayBuffer());
+    const crc=crc32(data); const nameBytes=enc.encode(f.name);
+    const lh=new Uint8Array(30+nameBytes.length); const dv=new DataView(lh.buffer);
+    dv.setUint32(0,0x04034b50,true); dv.setUint16(4,20,true); dv.setUint16(6,0,true); dv.setUint16(8,0,true);
+    dv.setUint16(10,0,true); dv.setUint16(12,0,true);
+    dv.setUint32(14,crc,true); dv.setUint32(18,data.length,true); dv.setUint32(22,data.length,true);
+    dv.setUint16(26,nameBytes.length,true); dv.setUint16(28,0,true);
+    lh.set(nameBytes,30); chunks.push(lh,data);
+    const ch=new Uint8Array(46+nameBytes.length); const cv=new DataView(ch.buffer);
+    cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true); cv.setUint16(6,20,true); cv.setUint16(8,0,true);
+    cv.setUint16(10,0,true); cv.setUint16(12,0,true); cv.setUint16(14,0,true); cv.setUint32(16,crc,true);
+    cv.setUint32(20,data.length,true); cv.setUint32(24,data.length,true); cv.setUint16(28,nameBytes.length,true);
+    cv.setUint16(30,0,true); cv.setUint16(32,0,true); cv.setUint16(34,0,true); cv.setUint16(36,0,true);
+    cv.setUint32(38,0,true); cv.setUint32(42,offset,true); ch.set(nameBytes,46);
+    central.push(ch); offset+=lh.length+data.length;
+  }
+  const cdSize=central.reduce((s,c)=>s+c.length,0);
+  const eo=new Uint8Array(22); const ev=new DataView(eo.buffer);
+  ev.setUint32(0,0x06054b50,true); ev.setUint16(4,0,true); ev.setUint16(6,0,true);
+  ev.setUint16(8,files.length,true); ev.setUint16(10,files.length,true);
+  ev.setUint32(12,cdSize,true); ev.setUint32(16,offset,true); ev.setUint16(20,0,true);
+  return new Blob([...chunks,...central,eo],{type:'application/zip'});
+}
+$('downloadFramesBtn').addEventListener('click',async()=>{
+  if(state.extractedFrames.length===0){ showMsg('请先提取帧'); return; }
+  const files=state.extractedFrames.map((fr,i)=>({name:`frames/frame_${String(i+1).padStart(5,'0')}.png`,blob:fr.blob}));
+  const zip=await makeZip(files); downloadBlob(zip,'frames.zip'); showMsg('已开始下载');
+});
+$('downloadMattedBtn').addEventListener('click',async()=>{
+  if(state.mattedFrames.length===0) return;
+  const files=state.mattedFrames.map((fr,i)=>({name:`matted_frames/matte_${String(i+1).padStart(5,'0')}.png`,blob:fr.blob}));
+  const zip=await makeZip(files); downloadBlob(zip,'matted_frames.zip'); showMsg('已开始下载');
+});
+$('downloadZipBtn').addEventListener('click',async()=>{
+  if(!state.exportedPreview||!state.displayedPngBlob) return;
+  const name=sanitizeFileName($('exportFileName').value);
+  const files=[{name:'sprite.png',blob:state.displayedPngBlob},{name:'index.json',blob:new Blob([JSON.stringify(state.exportedPreview.index,null,2)],{type:'application/json'})}];
+  const zip=await makeZip(files); downloadBlob(zip,`${name}.zip`); showMsg('已开始下载 ZIP');
+});
+$('downloadPngBtn').addEventListener('click',()=>{
+  if(!state.displayedPngBlob) return;
+  const name=sanitizeFileName($('exportFileName').value); downloadBlob(state.displayedPngBlob,`${name}.png`); showMsg('已开始下载 PNG');
+});
+
+/* ---------- 提取参数面板（FPS/起止/最大帧）内联 ---------- */
+(function injectParams(){
+  const box=$('cropBox');
+  const params=document.createElement('div');
+  params.style.cssText='margin-bottom:16px;padding:16px;border:1px solid rgba(255,255,255,0.5);border-radius:22px;background:rgba(255,255,255,0.52);-webkit-backdrop-filter:blur(22px) saturate(175%);backdrop-filter:blur(22px) saturate(175%);box-shadow:0 8px 30px rgba(40,20,10,0.18),inset 0 1px 0 rgba(255,255,255,0.75);';
+  params.innerHTML=`
+    <h3 class="ttl">导出参数</h3>
+    <div class="row">
+      <div class="col"><label class="fld">目标帧率 (FPS)</label><input type="number" id="fpsInput" min="1" max="60" value="12"></div>
+      <div class="col"><label class="fld">开始时间(秒)</label><input type="number" id="startSecInput" min="0" step="0.1" value="0"></div>
+      <div class="col"><label class="fld">结束时间(秒)</label><input type="number" id="endSecInput" min="0" step="0.1" value="5"></div>
+      <div class="col"><label class="fld">最大帧数</label><input type="number" id="maxFramesInput" min="1" max="2000" value="300"></div>
+    </div>`;
+  box.parentNode.insertBefore(params,box);
+  $('fpsInput').addEventListener('input',()=>{ updateExtractHint(); updateRangeInfo(); });
+  $('startSecInput').addEventListener('input',()=>{ const s=+$('startSecInput').value||0; const e=+$('endSecInput').value||state.range[1]; state.range=[s,Math.max(s,e)]; state.rangeRef=[...state.range]; updateExtractHint(); updateRangeInfo(); drawRangeCanvas(); });
+  $('endSecInput').addEventListener('input',()=>{ const e=+$('endSecInput').value||0; const s=+$('startSecInput').value||0; state.range=[Math.min(s,e),e]; state.rangeRef=[...state.range]; updateExtractHint(); updateRangeInfo(); drawRangeCanvas(); });
+  $('maxFramesInput').addEventListener('input',updateExtractHint);
+})();
+
+updateExtractHint();
+</script>
+</body>
+</html>
