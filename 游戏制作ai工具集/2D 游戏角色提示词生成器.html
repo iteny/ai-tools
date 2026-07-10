@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>2D 游戏角色提示词生成器 · × DeepSeek</title>
+<style>
+  :root {
+    --bg: #0e0f1a;
+    --panel: #171a2b;
+    --panel-2: #1f2336;
+    --line: #2c3250;
+    --txt: #e6e9f5;
+    --muted: #8b91b5;
+    --accent: #6c8cff;
+    --accent-2: #b56cff;
+    --good: #46d39a;
+    --warn: #ffb454;
+    --bad: #ff6b6b;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #1a1d33 0%, var(--bg) 60%);
+    color: var(--txt);
+    min-height: 100vh;
+    padding: 28px 16px 60px;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 22px; }
+  header h1 {
+    font-size: 26px; margin: 0 0 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    letter-spacing: 0.5px;
+  }
+  header p { color: var(--muted); margin: 0; font-size: 13px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 18px 16px;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  }
+  .card h2 {
+    font-size: 15px; margin: 0 0 14px; color: var(--txt);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .field { flex: 1 1 200px; min-width: 160px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  select, input, textarea {
+    width: 100%; background: var(--panel-2); color: var(--txt);
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    font-size: 13px; font-family: inherit; outline: none; transition: border-color .15s;
+  }
+  select:focus, input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; line-height: 1.5; }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  button {
+    border: none; border-radius: 10px; padding: 11px 18px; font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: transform .08s, filter .15s; color: #fff;
+    font-family: inherit;
+  }
+  button:active { transform: translateY(1px); }
+  .btn-primary { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-ghost { background: var(--panel-2); border: 1px solid var(--line); color: var(--txt); }
+  .btn-ghost:hover { border-color: var(--accent); }
+  .btn-sm { padding: 7px 12px; font-size: 12px; }
+  .gen-box {
+    margin-top: 14px; background: var(--panel-2); border: 1px dashed var(--line);
+    border-radius: 10px; padding: 14px; font-size: 13px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .gen-box .meta { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+  .gen-box .en { color: var(--txt); }
+  .gen-box .en .hl { color: var(--accent); }
+  .sec-title { font-size: 13px; color: var(--muted); margin: 14px 0 8px; }
+  .status { font-size: 12px; margin-top: 10px; min-height: 16px; }
+  .status.ok { color: var(--good); }
+  .status.err { color: var(--bad); }
+  .status.load { color: var(--warn); }
+  .toggle { font-size: 12px; color: var(--accent); cursor: pointer; user-select: none; }
+  .hidden { display: none; }
+  .copy-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  details { margin-top: 6px; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  .foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 8px; }
+  code { background: var(--panel-2); padding: 2px 6px; border-radius: 6px; font-size: 12px; }
+  .pill { display:inline-block; background: var(--panel-2); border:1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 11px; color: var(--muted); margin: 2px 4px 2px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>2D 游戏角色提示词生成器</h1>
+    <p>随机生成 · 基于 <code>2d-game-art</code> 提示词库 · 接 DeepSeek 优化成生图级英文 Prompt</p>
+  </header>
+
+  <!-- 随机生成 -->
+  <section class="card">
+    <h2><span class="dot"></span>① 随机生成游戏角色提示词</h2>
+    <div class="row">
+      <div class="field">
+        <label>画风 Style</label>
+        <select id="selStyle">
+          <option value="random">🎲 随机（全部 44 种）</option>
+          <optgroup label="像素与复古">
+            <option value="pixel">像素风 Pixel</option>
+            <option value="hd2d">HD-2D（八方旅人）</option>
+            <option value="bit8">8-bit 红白机</option>
+            <option value="bit16">16-bit 超任</option>
+          </optgroup>
+          <optgroup label="动画">
+            <option value="anime">二次元 Anime</option>
+            <option value="chibi">Q版 / Chibi</option>
+            <option value="ghibli">吉卜力</option>
+            <option value="disney">迪士尼经典</option>
+            <option value="rubberhose">橡皮管（1930s / Cuphead）</option>
+            <option value="webtoon">韩漫 Webtoon</option>
+            <option value="bd">法式清线 BD</option>
+            <option value="moe">萌系 Moe</option>
+          </optgroup>
+          <optgroup label="插画与材质">
+            <option value="cartoon">卡通扁平 Cartoon</option>
+            <option value="minimal">极简 Minimal</option>
+            <option value="watercolor">水彩 Watercolor</option>
+            <option value="oil">油画 Oil</option>
+            <option value="semi">写实厚涂 Semi-real</option>
+            <option value="sketch">手绘涂鸦 Sketch</option>
+            <option value="papercut">剪纸拼贴</option>
+            <option value="clay">黏土 Claymation</option>
+            <option value="origami">折纸 Origami</option>
+            <option value="woodcut">版画 Woodcut</option>
+            <option value="popart">波普 Pop Art</option>
+          </optgroup>
+          <optgroup label="文化与传统">
+            <option value="guofeng">水墨国风</option>
+            <option value="ukiyoe">浮世绘</option>
+            <option value="wa">和风 Wa</option>
+            <option value="persian">波斯细密画</option>
+            <option value="mandala">印度纹样</option>
+            <option value="afro">非洲图腾</option>
+          </optgroup>
+          <optgroup label="暗黑与氛围">
+            <option value="gothic">哥特暗黑 Gothic</option>
+            <option value="silhouette">剪影（Limbo）</option>
+            <option value="noir">黑色电影 Noir</option>
+            <option value="darkfairytale">暗黑童话</option>
+            <option value="wasteland">废土 Wasteland</option>
+          </optgroup>
+          <optgroup label="科幻与霓虹">
+            <option value="cyberpunk">赛博朋克 Cyberpunk</option>
+            <option value="synthwave">合成波 Synthwave</option>
+            <option value="steampunk">蒸汽朋克 Steampunk</option>
+            <option value="glitch">故障艺术 Glitch</option>
+            <option value="crt">CRT 扫描线</option>
+          </optgroup>
+          <optgroup label="艺术运动">
+            <option value="mucha">新艺术（穆夏）</option>
+            <option value="deco">装饰艺术 Deco</option>
+            <option value="impressionist">印象派</option>
+            <option value="surreal">超现实 Surreal</option>
+            <option value="bauhaus">包豪斯 Bauhaus</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="field">
+        <label>资产类型 Asset</label>
+        <select id="selAsset">
+          <option value="random">🎲 随机（全部 28 种）</option>
+          <optgroup label="角色 Characters">
+            <option value="sprite">角色精灵图 Sprite</option>
+            <option value="portrait">角色立绘 Portrait</option>
+            <option value="npc">NPC 立绘</option>
+            <option value="emote">表情包 Emote</option>
+            <option value="enemy">怪物精灵 Enemy</option>
+            <option value="boss">Boss 立绘</option>
+            <option value="creature">坐骑/宠物</option>
+          </optgroup>
+          <optgroup label="环境 Environment">
+            <option value="scene">场景背景 BG</option>
+            <option value="tileset">瓦片集 Tileset</option>
+            <option value="map">地图 Map</option>
+            <option value="vehicle">载具 Vehicle</option>
+          </optgroup>
+          <optgroup label="物件 Objects">
+            <option value="prop">道具物件 Prop</option>
+            <option value="item">消耗品 Item</option>
+            <option value="weapon">武器 Weapon</option>
+          </optgroup>
+          <optgroup label="特效 Effects">
+            <option value="effect">技能特效 Effect</option>
+            <option value="particle">粒子 Particle</option>
+          </optgroup>
+          <optgroup label="UI 界面">
+            <option value="icon">UI 图标 Icon</option>
+            <option value="button">按钮 Button</option>
+            <option value="panel">面板/边框 Panel</option>
+            <option value="cursor">鼠标指针 Cursor</option>
+            <option value="logo">游戏Logo</option>
+            <option value="banner">活动横幅 Banner</option>
+            <option value="avatarframe">头像框 Frame</option>
+            <option value="achievement">成就图标</option>
+          </optgroup>
+          <optgroup label="宣传与CG">
+            <option value="keyvisual">主视觉 Key Visual</option>
+            <option value="cg">过场 CG</option>
+            <option value="card">卡牌 Card</option>
+            <option value="loading">加载图 Loading</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="field">
+        <label>角色原型 Archetype</label>
+        <select id="selArch">
+          <option value="random">🎲 随机（全部 56 种）</option>
+          <optgroup label="⚔️ 经典职业">
+            <option value="hero">勇者 / 骑士</option>
+            <option value="mage">法师</option>
+            <option value="rogue">盗贼 / 刺客</option>
+            <option value="archer">弓箭手</option>
+            <option value="warrior">狂战士</option>
+            <option value="priest">牧师 / 圣职</option>
+            <option value="paladin">圣骑士</option>
+            <option value="druid">德鲁伊</option>
+            <option value="bard">吟游诗人</option>
+            <option value="monk">武僧</option>
+            <option value="necromancer">死灵法师</option>
+            <option value="summoner">召唤师</option>
+            <option value="warlock">术士</option>
+            <option value="ranger">游侠</option>
+            <option value="knight">重装骑士</option>
+            <option value="alchemist">炼金术士</option>
+          </optgroup>
+          <optgroup label="🌿 奇幻种族">
+            <option value="elf">精灵</option>
+            <option value="dwarf">矮人</option>
+            <option value="orc">兽人</option>
+            <option value="demon">恶魔</option>
+            <option value="angel">天使</option>
+            <option value="dragon">龙骑士</option>
+            <option value="vampire">吸血鬼</option>
+            <option value="werewolf">狼人</option>
+            <option value="fairy">妖精</option>
+            <option value="golem">魔像</option>
+          </optgroup>
+          <optgroup label="🏛️ 神话传说">
+            <option value="valkyrie">女武神</option>
+            <option value="god_norse">北欧神祇</option>
+            <option value="hero_greek">希腊英雄</option>
+            <option value="xian">仙侠 / 剑仙</option>
+            <option value="yokai">日本妖怪</option>
+            <option value="pharaoh">埃及法老</option>
+            <option value="titan">泰坦巨人</option>
+          </optgroup>
+          <optgroup label="🚀 科幻未来">
+            <option value="mecha">机甲士兵</option>
+            <option value="cyborg">赛博格</option>
+            <option value="hacker">赛博黑客</option>
+            <option value="astronaut">宇航员</option>
+            <option value="pilot">星舰驾驶员</option>
+            <option value="android">仿生机器人</option>
+            <option value="mutant">变种人</option>
+          </optgroup>
+          <optgroup label="🏙️ 现代日常">
+            <option value="student">学生</option>
+            <option value="police">警察</option>
+            <option value="soldier">现代士兵</option>
+            <option value="chef">厨师</option>
+            <option value="idol">偶像歌姬</option>
+            <option value="doctor">医生</option>
+            <option value="reporter">记者</option>
+          </optgroup>
+          <optgroup label="💀 反派 Boss">
+            <option value="lich">巫妖</option>
+            <option value="darkknight">黑暗骑士</option>
+            <option value="cultist">邪教徒</option>
+            <option value="overlord">魔王</option>
+            <option value="skeleton">骷髅兵</option>
+            <option value="slime">史莱姆王</option>
+          </optgroup>
+          <optgroup label="🌸 可爱 Q版">
+            <option value="catgirl">猫娘</option>
+            <option value="kitsune">狐娘</option>
+            <option value="chibi_hero">Q版勇者</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="btn-primary" id="btnGen">🎲 随机生成</button>
+      <button class="btn-ghost" id="btnGenFull">♾️ 再来一张（全随机）</button>
+    </div>
+    <div class="gen-box" id="genBox">
+      <div class="meta">点击「随机生成」开始…</div>
+    </div>
+    <div class="copy-row" id="genCopyRow" style="display:none">
+      <button class="btn-ghost btn-sm" id="copyEn">📋 复制英文 Prompt</button>
+      <button class="btn-ghost btn-sm" id="copyZh">📋 复制中文说明</button>
+    </div>
+  </section>
+
+  <!-- DeepSeek 优化 -->
+  <section class="card">
+    <h2><span class="dot" style="background:var(--accent-2);box-shadow:0 0 10px var(--accent-2)"></span>② 用 DeepSeek 优化提示词</h2>
+
+    <details id="apiCfg">
+      <summary>⚙️ API 配置（API Key / 地址 / 模型，已本地保存）</summary>
+      <div class="row" style="margin-top:12px">
+        <div class="field" style="flex:2 1 320px">
+          <label>DeepSeek API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off" />
+        </div>
+        <div class="field" style="flex:2 1 320px">
+          <label>API Base URL</label>
+          <input type="text" id="apiBase" value="https://api.deepseek.com" />
+        </div>
+        <div class="field" style="flex:1 1 160px">
+          <label>模型 Model</label>
+          <input type="text" id="apiModel" value="deepseek-chat" />
+        </div>
+      </div>
+      <div class="sec-title">说明：默认直连 <code>api.deepseek.com</code>。若浏览器报 CORS 跨域错误，可把 Base URL 改成你自己的代理（OpenAI 兼容格式 <code>/chat/completions</code>）。Key 仅存于本地浏览器 localStorage，不会上传到任何第三方。</div>
+    </details>
+
+    <div class="sec-title">待优化的提示词（可编辑，默认填入上方随机结果）</div>
+    <textarea id="inputPrompt" rows="4" placeholder="在此粘贴或编辑需要优化的提示词…"></textarea>
+
+    <div class="btns">
+      <button class="btn-primary" id="btnOpt">🚀 用 DeepSeek 优化</button>
+      <button class="btn-ghost" id="btnUseGen">⬇️ 填入上方随机结果</button>
+    </div>
+    <div class="status" id="optStatus"></div>
+
+    <div class="gen-box" id="optBox" style="display:none">
+      <div class="meta">DeepSeek 返回结果</div>
+      <div id="optContent"></div>
+    </div>
+    <div class="copy-row" id="optCopyRow" style="display:none">
+      <button class="btn-ghost btn-sm" id="copyOptEn">📋 复制英文 Prompt</button>
+      <button class="btn-ghost btn-sm" id="copyOptFull">📋 复制完整（含中文）</button>
+    </div>
+  </section>
+
+  <div class="foot">本工具为本地单文件应用 · 随机词库来自 <code>2d-game-art</code> 技能 · 优化由 DeepSeek API 完成</div>
+</div>
+
+<script>
+/* ============ 提示词词库（对齐 2d-game-art 技能） ============ */
+const STYLES = {
+  /* 像素与复古 */
+  pixel:     { zh:"像素风", kw:"pixel art, 16-bit style, retro game aesthetic, limited color palette, dithering, crisp pixel edges, no anti-aliasing" },
+  hd2d:      { zh:"HD-2D", kw:"HD-2D style, detailed pixel art with dynamic lighting and depth, modern pixel rendering, soft glow, rich colors" },
+  bit8:      { zh:"8-bit红白机", kw:"8-bit pixel art, NES style, limited 4-color palette, blocky pixels, retro arcade" },
+  bit16:     { zh:"16-bit超任", kw:"16-bit pixel art, SNES style, richer palette, refined pixels, retro" },
+  /* 动画 */
+  anime:     { zh:"二次元", kw:"anime style, cel shading, clean lineart, vibrant flat colors, Japanese illustration, detailed eyes, soft gradients" },
+  chibi:     { zh:"Q版Chibi", kw:"chibi style, super deformed, big head small body, cute proportions, rounded shapes, bright kawaii colors, anime influenced" },
+  ghibli:    { zh:"吉卜力", kw:"studio ghibli style, soft painterly, hand-drawn animation, warm nostalgic, detailed, gentle lighting" },
+  disney:    { zh:"迪士尼经典", kw:"classic disney animation style, rubbery shapes, expressive, warm hand-drawn" },
+  rubberhose:{ zh:"橡皮管(1930s/Cuphead)", kw:"rubber hose animation style, 1930s cartoon, pie-cut eyes, black and white ink lines, cuphead style" },
+  webtoon:   { zh:"韩漫Webtoon", kw:"korean webtoon style, clean lines, soft coloring, manicured, vertical comic" },
+  bd:        { zh:"法式清线BD", kw:"ligne claire style, clear line bande dessinee, flat even colors, herge tintin style" },
+  moe:       { zh:"萌系Moe", kw:"moe anime style, cute, soft pastel colors, sparkly, detailed hair" },
+  /* 插画与材质 */
+  cartoon:   { zh:"卡通扁平", kw:"flat design, vector cartoon, bold outlines, rounded shapes, bright saturated colors, children's book illustration, clean minimal shading" },
+  minimal:   { zh:"极简", kw:"minimalist flat design, simple geometric shapes, limited palette, clean negative space, modern flat colors" },
+  watercolor:{ zh:"水彩", kw:"watercolor painting, soft washes, paper texture, translucent flowing colors, hand-painted, gentle edges" },
+  oil:       { zh:"油画", kw:"oil painting style, thick visible brushstrokes, rich texture, classical, chiaroscuro lighting, detailed" },
+  semi:      { zh:"写实厚涂", kw:"semi-realistic illustration, painterly, digital painting, soft volumetric lighting, detailed textures, cinematic mood, concept art style" },
+  sketch:    { zh:"手绘涂鸦", kw:"hand-drawn sketch, ink doodle, marker style, loose sketchy lines, casual, white background" },
+  papercut:  { zh:"剪纸拼贴", kw:"paper cut art, layered paper, flat shapes, tactile cut texture, silhouette style, craft aesthetic" },
+  clay:      { zh:"黏土", kw:"claymation style, clay modeling, handmade texture, soft rounded, stop-motion look" },
+  origami:   { zh:"折纸", kw:"origami style, folded paper, geometric folds, paper craft, clean" },
+  woodcut:   { zh:"版画", kw:"woodcut print style, bold carved lines, high contrast, textured ink" },
+  popart:    { zh:"波普", kw:"pop art style, bold flat colors, ben-day dots, lichtenstein comic halftone" },
+  /* 文化与传统 */
+  guofeng:   { zh:"水墨国风", kw:"Chinese ink wash painting, sumi-e, black ink brush strokes, minimal color accent, elegant, traditional oriental guofeng style" },
+  ukiyoe:    { zh:"浮世绘", kw:"ukiyo-e woodblock print, flat color regions, bold outlines, japanese traditional, decorative patterns" },
+  wa:        { zh:"和风", kw:"japanese traditional wa style, elegant nature motifs, soft, sumi-e accents" },
+  persian:   { zh:"波斯细密画", kw:"persian miniature painting, intricate patterns, gold leaf, detailed borders" },
+  mandala:   { zh:"印度纹样", kw:"indian folk art style, madhubani, vibrant patterns, decorative" },
+  afro:      { zh:"非洲图腾", kw:"african tribal art style, bold patterns, earthy tones, masks, vibrant" },
+  /* 暗黑与氛围 */
+  gothic:    { zh:"哥特暗黑", kw:"dark fantasy gothic style, gothic illustration, eerie mood, muted desaturated palette, ornate details, ominous lighting" },
+  silhouette:{ zh:"剪影(Limbo)", kw:"silhouette style, pure black shapes, limbo game style, minimal background" },
+  noir:      { zh:"黑色电影", kw:"film noir style, high contrast black and white, dramatic shadows, detective" },
+  darkfairytale:{ zh:"暗黑童话", kw:"dark fairy tale style, eerie whimsical, muted grim, storybook" },
+  wasteland: { zh:"废土", kw:"post-apocalyptic wasteland style, muted browns, rust, desolate" },
+  /* 科幻与霓虹 */
+  cyberpunk: { zh:"赛博朋克", kw:"cyberpunk style, neon glow, dark background, magenta and cyan rim lighting, futuristic, high contrast, glitch accents" },
+  synthwave: { zh:"合成波", kw:"synthwave style, neon gradients, retro 80s, purple pink cyan, grid horizon, glow, vaporwave" },
+  steampunk: { zh:"蒸汽朋克", kw:"steampunk style, brass and copper, mechanical gears, victorian, intricate metalwork, warm sepia tones" },
+  glitch:    { zh:"故障艺术", kw:"glitch art style, datamosh, corrupted pixels, rgb split, digital noise" },
+  crt:       { zh:"CRT扫描线", kw:"crt scanline style, retro monitor glow, green phosphor, vintage terminal" },
+  /* 艺术运动 */
+  mucha:     { zh:"新艺术(穆夏)", kw:"art nouveau style, mucha, flowing organic lines, ornate decorative" },
+  deco:      { zh:"装饰艺术", kw:"art deco style, great gatsby, geometric gold, elegant symmetry" },
+  impressionist:{ zh:"印象派", kw:"impressionist painting, visible brushstrokes, light dabs, monet" },
+  surreal:   { zh:"超现实", kw:"surrealism style, dali, dreamlike, impossible, melting forms" },
+  bauhaus:   { zh:"包豪斯", kw:"bauhaus style, geometric primary colors, minimal, functional" }
+};
+
+const ARCH = {
+  /* 经典职业 Classic classes */
+  hero:        { zh:"勇者/骑士",  en:"a brave young knight with shining blue armor" },
+  mage:        { zh:"法师",      en:"a young female mage with a glowing blue staff and a spellbook" },
+  rogue:       { zh:"盗贼/刺客", en:"a nimble rogue assassin with twin daggers and a hooded cloak" },
+  archer:      { zh:"弓箭手",    en:"an elf archer with a carved longbow and a green cape" },
+  warrior:     { zh:"狂战士",    en:"a muscular berserker with a massive battle axe" },
+  priest:      { zh:"牧师/圣职", en:"a holy priestess with a golden staff and radiant halo" },
+  paladin:     { zh:"圣骑士",    en:"a paladin in gilded holy armor with a glowing greatsword and shield" },
+  druid:       { zh:"德鲁伊",    en:"a nature druid with antler crown and a shifting animal-spirit aura" },
+  bard:        { zh:"吟游诗人",  en:"a cheerful bard with a lute and a flamboyant traveler's coat" },
+  monk:        { zh:"武僧",      en:"a bare-handed martial monk in simple robes with glowing fists" },
+  necromancer: { zh:"死灵法师",  en:"a necromancer in tattered robes commanding floating skulls" },
+  summoner:    { zh:"召唤师",    en:"a mysterious summoner with floating arcane circles" },
+  warlock:     { zh:"术士",      en:"a warlock bound to a shadowy patron with glowing cursed runes" },
+  ranger:      { zh:"游侠",      en:"a seasoned ranger with a longbow and a loyal wolf companion" },
+  knight:      { zh:"重装骑士",  en:"a heavy knight in full plate armor with a tower shield" },
+  alchemist:   { zh:"炼金术士",  en:"a steampunk alchemist with goggles and bubbling flasks" },
+
+  /* 奇幻种族 Fantasy races */
+  elf:      { zh:"精灵",   en:"an elegant forest elf with leaf-shaped ears and nature magic" },
+  dwarf:    { zh:"矮人",   en:"a stout dwarf warrior with a braided beard and a rune hammer" },
+  orc:      { zh:"兽人",   en:"a brutish orc warrior with tusks and crude scrap armor" },
+  demon:    { zh:"恶魔",   en:"a horned demon warrior with wings and infernal armor" },
+  angel:    { zh:"天使",   en:"a radiant angel with feathered wings and a holy blade" },
+  dragon:   { zh:"龙骑士", en:"a dragon knight with scaled pauldrons riding a small dragon companion" },
+  vampire:  { zh:"吸血鬼", en:"a pale vampire noble with a high collar and crimson eyes" },
+  werewolf: { zh:"狼人",   en:"a werewolf with fur and claws in partial transformation" },
+  fairy:    { zh:"妖精",   en:"a tiny winged fairy with glowing wings and a flower dress" },
+  golem:    { zh:"魔像",   en:"a living clay golem with cracks of warm inner light" },
+
+  /* 神话传说 Myth & legend */
+  valkyrie:   { zh:"女武神",    en:"a winged valkyrie with a glowing spear" },
+  god_norse:  { zh:"北欧神祇",  en:"a norse god with a winged helm and a storm aura" },
+  hero_greek: { zh:"希腊英雄",  en:"a greek hero in a chiton tunic with a bronze sword and round shield" },
+  xian:       { zh:"仙侠/剑仙", en:"a chinese xianxian sword immortal with flowing robes and a flying sword" },
+  yokai:      { zh:"日本妖怪",  en:"a japanese yokai spirit with multiple eyes and an eerie aura" },
+  pharaoh:    { zh:"埃及法老",  en:"an egyptian pharaoh in a nemes headdress with golden regalia" },
+  titan:      { zh:"泰坦巨人",  en:"a colossal titan giant with cracked stone skin" },
+
+  /* 科幻未来 Sci-fi & future */
+  mecha:     { zh:"机甲士兵",  en:"a futuristic mech soldier in an armored exosuit" },
+  cyborg:    { zh:"赛博格",    en:"a cyborg with a mechanical arm and a glowing optic implant" },
+  hacker:    { zh:"赛博黑客",  en:"a cyber hacker with a neon visor and floating holographic screens" },
+  astronaut: { zh:"宇航员",    en:"a space astronaut in a bulky suit with an reflective helmet" },
+  pilot:     { zh:"星舰驾驶员", en:"a starship pilot in a flight suit with futuristic goggles" },
+  android:   { zh:"仿生机器人", en:"a sleek android with synthetic skin and subtle LED accents" },
+  mutant:    { zh:"变种人",    en:"a mutant with visible unnatural powers and an altered body" },
+
+  /* 现代日常 Modern & everyday */
+  student: { zh:"学生",     en:"a school student with a backpack and a casual uniform" },
+  police:  { zh:"警察",     en:"a police officer in uniform with a badge" },
+  soldier: { zh:"现代士兵", en:"a modern soldier in tactical gear with a rifle" },
+  chef:    { zh:"厨师",     en:"a chef in a white toque and apron holding a pan" },
+  idol:    { zh:"偶像歌姬", en:"a pop idol singer with a mic and a stage outfit" },
+  doctor:  { zh:"医生",     en:"a doctor in scrubs with a stethoscope" },
+  reporter: { zh:"记者",    en:"a field reporter with a camera and a press badge" },
+
+  /* 反派 Boss Villains & bosses */
+  lich:       { zh:"巫妖",     en:"an ancient lich with a crowned skull and a frost staff" },
+  darkknight: { zh:"黑暗骑士", en:"a fallen dark knight in black armor with a cursed blade" },
+  cultist:    { zh:"邪教徒",   en:"a hooded cultist with ritual markings and a dagger" },
+  overlord:   { zh:"魔王",     en:"a demon overlord on a throne of bones with an immense dark aura" },
+  skeleton:   { zh:"骷髅兵",   en:"a rattling skeleton soldier with a rusty sword" },
+  slime:      { zh:"史莱姆王", en:"a giant slime king boss with a crown and a jeweled core" },
+
+  /* 可爱 Q版 Cute & chibi */
+  catgirl:    { zh:"猫娘",   en:"a catgirl with cat ears and a tail in a casual outfit" },
+  kitsune:    { zh:"狐娘",   en:"a kitsune foxgirl with multiple tails and fox ears" },
+  chibi_hero: { zh:"Q版勇者", en:"a chibi super-deformed cute hero with a big head and a small body" }
+};
+const MONSTERS = [
+  { zh:"史莱姆", en:"a cute slime" },
+  { zh:"哥布林", en:"a goblin grunt with a dagger" },
+  { zh:"骷髅兵", en:"a rattling skeleton soldier" },
+  { zh:"幼龙", en:"a young dragon with small wings" },
+  { zh:"恶魔", en:"a horned demon with infernal armor" },
+  { zh:"幽灵", en:"a floating ghost with hollow eyes" },
+  { zh:"巨蛛", en:"a giant spider with red eyes" },
+  { zh:"石巨人", en:"a stone golem" },
+  { zh:"蝙蝠", en:"a vampire bat" },
+  { zh:"兽人", en:"a brutish orc warrior" },
+  { zh:"海妖", en:"a tentacled kraken" },
+  { zh:"宝箱怪", en:"a mimic disguised as a treasure chest" }
+];
+const OBJECTS = [
+  { zh:"生命药水", en:"a red health potion" },
+  { zh:"铁剑", en:"an iron sword" },
+  { zh:"宝箱", en:"a treasure chest" },
+  { zh:"金钥匙", en:"a golden key" },
+  { zh:"宝石", en:"a glowing gem" },
+  { zh:"炸弹", en:"a round bomb" },
+  { zh:"木盾", en:"a wooden shield" },
+  { zh:"弓", en:"a hunting bow" },
+  { zh:"法杖", en:"a magic staff" },
+  { zh:"金币", en:"a gold coin" },
+  { zh:"红心", en:"a heart container" },
+  { zh:"蘑菇", en:"a red mushroom" }
+];
+const VEHICLES = [
+  { zh:"赛车", en:"a race car" },
+  { zh:"帆船", en:"a sailing ship" },
+  { zh:"飞艇", en:"a steampunk airship" },
+  { zh:"摩托", en:"a motorcycle" },
+  { zh:"热气球", en:"a hot air balloon" }
+];
+const ENV = [
+  { zh:"森林", en:"mysterious forest" },
+  { zh:"地牢", en:"stone dungeon" },
+  { zh:"沙漠", en:"golden desert" },
+  { zh:"雪原", en:"snowy tundra" },
+  { zh:"火山", en:"volcano caverns" },
+  { zh:"城镇", en:"cozy town" },
+  { zh:"城堡", en:"gothic castle" },
+  { zh:"晶洞", en:"glowing crystal cave" },
+  { zh:"沼泽", en:"misty swamp" },
+  { zh:"浮空岛", en:"floating sky islands" },
+  { zh:"海底", en:"underwater reef" },
+  { zh:"赛博都市", en:"neon cyberpunk city" }
+];
+
+const WEAPONS = ["a glowing sword","a rune staff","twin daggers","a longbow","a massive hammer","a spellbook","a spear","a shield and sword","a scythe","a crystal wand"];
+const COLORS  = ["crimson red","azure blue","violet purple","golden yellow","emerald green","obsidian black","silver white","rose pink"];
+const POSES   = ["standing idle pose","dynamic battle stance","casting a spell","walking cycle","victory pose","aggressive lunge"];
+const MOODS   = ["confident smile","fierce determined glare","calm gentle expression","mysterious smirk","battle-focused frown"];
+const LIGHTS  = ["dramatic studio lighting","soft rim light","golden hour glow","moody blue ambient","cozy warm light","volumetric god rays"];
+const VIEWS   = ["front view","3/4 view","side view","full-body"];
+const NEG = "no text, no watermark, no signature, no UI overlay, no extra limbs, no blurry, no low-resolution, no 3D render, no realistic photo";
+
+const ASSET_KEYS = ["sprite","portrait","npc","emote","enemy","boss","creature","scene","tileset","map","vehicle","prop","item","weapon","effect","particle","icon","button","panel","cursor","logo","banner","avatarframe","achievement","keyvisual","cg","card","loading"];
+
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function getStyle(v){ return v==="random" ? pick(Object.keys(STYLES)) : v; }
+function getAsset(v){ return v==="random" ? pick(ASSET_KEYS) : v; }
+function getArch(v){ return v==="random" ? pick(Object.keys(ARCH)) : v; }
+
+/* 主题自适应：不同资产类型从对应词池取主体，并标注来源类别 */
+function subjectFor(assetKey, archKey){
+  const charA = ["sprite","portrait","npc","emote","keyvisual","cg","card","loading"];
+  const monA  = ["enemy","boss","creature"];
+  const objA  = ["prop","item","icon","button","panel","cursor","logo","banner","avatarframe","achievement"];
+  const vehA  = ["vehicle"];
+  const envA  = ["scene","tileset","map"];
+  const fxA   = ["effect","particle"];
+  if(charA.includes(assetKey)){ const s = ARCH[archKey] || pick(Object.values(ARCH)); return { ...s, cat:"角色原型" }; }
+  if(monA.includes(assetKey)){  const s = pick(MONSTERS);  return { ...s, cat:"怪物池" }; }
+  if(objA.includes(assetKey)){  const s = pick(OBJECTS);   return { ...s, cat:"道具池" }; }
+  if(vehA.includes(assetKey)){  const s = pick(VEHICLES);  return { ...s, cat:"载具池" }; }
+  if(envA.includes(assetKey)){  const s = pick(ENV);       return { ...s, cat:"场景池" }; }
+  if(fxA.includes(assetKey)){   return null; }
+  const s = ARCH[archKey] || pick(Object.values(ARCH)); return { ...s, cat:"角色原型" };
+}
+
+/* ============ 随机生成 ============ */
+function buildPrompt(styleKey, assetKey, archKey){
+  const style = STYLES[styleKey];
+  const subj = subjectFor(assetKey, archKey);
+  const VIEW = pick(VIEWS), POSE = pick(POSES), MOOD = pick(MOODS), LIGHT = pick(LIGHTS), COLOR = pick(COLORS), WEAP = pick(WEAPONS);
+  let en = "", zh = `画风：${style.zh} ｜ `;
+
+  switch(assetKey){
+    case "sprite":
+      en = `${subj.en}, ${style.kw}, character sprite, full body, ${VIEW}, ${POSE}, transparent background, clean readable silhouette, flat even lighting, 2D game asset, ${NEG}`;
+      zh += "资产：角色精灵图（全身·透明底）"; break;
+    case "portrait":
+      en = `${subj.en}, ${style.kw}, full-body character portrait, ${MOOD}, detailed costume, ${VIEW}, ${LIGHT}, high detail, 2D game character art, transparent background, ${NEG}`;
+      zh += "资产：角色全身立绘（透明底）"; break;
+    case "npc":
+      en = `${subj.en}, ${style.kw}, NPC character portrait, ${MOOD}, friendly readable design, ${VIEW}, ${LIGHT}, 2D game asset, transparent background, ${NEG}`;
+      zh += "资产：NPC 立绘"; break;
+    case "emote":
+      en = `${subj.en}, ${style.kw}, character face emoji set, exaggerated ${MOOD} expression, close-up, transparent background, bold readable, 2D game asset, ${NEG}`;
+      zh += "资产：表情包（面部）"; break;
+    case "enemy":
+      en = `${subj.en}, ${style.kw}, game enemy sprite, full body, ${VIEW}, aggressive hostile pose, transparent background, readable silhouette, 2D game asset, ${NEG}`;
+      zh += "资产：怪物精灵"; break;
+    case "boss":
+      en = `${subj.en}, ${style.kw}, boss character, full-body, ${VIEW}, menacing pose, ${LIGHT}, high detail, dramatic, 2D game boss art, transparent background, ${NEG}`;
+      zh += "资产：Boss 立绘"; break;
+    case "creature":
+      en = `${subj.en}, ${style.kw}, companion creature / pet / mount, full body, ${VIEW}, ${POSE}, transparent background, 2D game asset, ${NEG}`;
+      zh += "资产：坐骑/宠物"; break;
+    case "scene":
+      en = `${subj.en} game environment, ${style.kw}, game background concept art, wide establishing shot, layered parallax, atmospheric ${LIGHT}, rich detail, 2D game background, ${NEG}`;
+      zh += "资产：场景背景（横版分层）"; break;
+    case "tileset":
+      en = `${subj.en} tileset, ${style.kw}, seamless tileable, top-down game tiles, grass stone water brick variants, 2D game asset, ${NEG}`;
+      zh += "资产：瓦片集（无缝平铺）"; break;
+    case "map":
+      en = `${subj.en} world map, ${style.kw}, game map illustration, labeled regions, 2D game asset, ${NEG}`;
+      zh += "资产：地图"; break;
+    case "vehicle":
+      en = `${subj.en}, ${style.kw}, game vehicle, side view, full body, transparent background, detailed, 2D game asset, ${NEG}`;
+      zh += "资产：载具"; break;
+    case "prop":
+      en = `game prop of ${subj.en}, ${style.kw}, ${VIEW}, centered, transparent background, detailed, 2D game asset, ${NEG}`;
+      zh += "资产：道具物件"; break;
+    case "item":
+      en = `game item icon of ${subj.en}, ${style.kw}, centered, 3/4 view, transparent background, bold readable, mobile game asset, ${NEG}`;
+      zh += "资产：消耗品道具"; break;
+    case "weapon":
+      en = `game weapon of ${WEAP}, ${style.kw}, centered, 3/4 view, transparent background, detailed, 2D game asset, ${NEG}`;
+      zh += "资产：武器"; break;
+    case "effect":
+      en = `${style.kw} magic effect, glowing energy, particle burst, skill fx, transparent background, no subject, dynamic, game vfx, ${NEG}`;
+      zh += "资产：技能特效"; break;
+    case "particle":
+      en = `${style.kw} particle sprite, small glow spark, transparent background, no subject, game vfx, ${NEG}`;
+      zh += "资产：粒子"; break;
+    case "icon":
+      en = `game UI icon of ${subj.en}, ${style.kw}, centered, 3/4 view, transparent background, bold readable silhouette, vibrant, clean edges, mobile game asset, ${NEG}`;
+      zh += "资产：UI 图标"; break;
+    case "button":
+      en = `game UI button, ${style.kw}, rounded, ${COLOR} theme, transparent background, clean edges, game asset, ${NEG}`;
+      zh += "资产：UI 按钮"; break;
+    case "panel":
+      en = `game UI panel frame, ${style.kw}, 9-slice border, ornamental, ${COLOR} theme, transparent background, game asset, ${NEG}`;
+      zh += "资产：UI 面板/边框"; break;
+    case "cursor":
+      en = `game custom cursor, ${style.kw}, arrow pointer, ${COLOR} glow, transparent background, clean, game asset, ${NEG}`;
+      zh += "资产：鼠标指针"; break;
+    case "logo":
+      en = `game logo title text, ${style.kw}, bold emblem, ${COLOR} theme, transparent background, game branding, ${NEG}`;
+      zh += "资产：游戏 Logo/标题"; break;
+    case "banner":
+      en = `game event banner, ${style.kw}, horizontal, ${COLOR} theme, festive, 2D game asset, ${NEG}`;
+      zh += "资产：活动横幅"; break;
+    case "avatarframe":
+      en = `game avatar frame, ${style.kw}, ornamental border, ${COLOR} theme, transparent background, game asset, ${NEG}`;
+      zh += "资产：头像框"; break;
+    case "achievement":
+      en = `game achievement icon, ${style.kw}, medal trophy, centered, transparent background, bold, game asset, ${NEG}`;
+      zh += "资产：成就图标"; break;
+    case "keyvisual":
+      en = `${subj.en}, ${style.kw}, cinematic key visual, full illustration, ${VIEW}, ${LIGHT}, dramatic composition, high detail, game promo art, ${NEG}`;
+      zh += "资产：主视觉/宣传图"; break;
+    case "cg":
+      en = `${subj.en}, ${style.kw}, visual novel CG illustration, full scene, ${LIGHT}, emotional, detailed background, 2D game art, ${NEG}`;
+      zh += "资产：过场 CG"; break;
+    case "card":
+      en = `game card art of ${subj.en}, ${style.kw}, vertical card frame, full-body, ${LIGHT}, detailed, 2D game asset, ${NEG}`;
+      zh += "资产：卡牌"; break;
+    case "loading":
+      en = `${subj.en}, ${style.kw}, loading screen splash art, atmospheric, ${LIGHT}, 2D game art, ${NEG}`;
+      zh += "资产：加载图"; break;
+    default:
+      en = `${subj.en}, ${style.kw}, 2D game asset, transparent background, ${NEG}`;
+      zh += "资产：通用"; break;
+  }
+  // 角色类随机点缀（武器 + 配色）
+  const charA = ["sprite","portrait","npc","boss","creature","keyvisual","cg","card","loading"];
+  if(charA.includes(assetKey) && subj){
+    en = en.replace(subj.en, `${subj.en} wielding ${WEAP}, ${COLOR} color scheme`);
+  }
+  // 拼入主体（角色原型 / 怪物 / 道具 / 场景 / 载具），让随机结果里的角色类型可见
+  const subjZh = subj ? `${subj.zh}${subj.cat?`（${subj.cat}）`:""}` : "—（纯特效）";
+  zh = zh.replace(" ｜ 资产：", ` ｜ 主体：${subjZh} ｜ 资产：`);
+  return { en, zh, style: style.zh, arch: subj ? subj.zh : "—", asset: assetKey };
+}
+
+let lastGen = null;
+let optEnText = "";
+function renderGen(fullRandom){
+  const s = fullRandom ? "random" : document.getElementById("selStyle").value;
+  const a = fullRandom ? "random" : document.getElementById("selAsset").value;
+  const r = fullRandom ? "random" : document.getElementById("selArch").value;
+  let styleKey = getStyle(s), assetKey = getAsset(a), archKey = getArch(r);
+  const charA = ["sprite","portrait","npc","emote","keyvisual","cg","card","loading"];
+  // 用户指定了具体角色原型、但资产选了「随机」→ 把资产随机限定在角色类，保证角色原型生效
+  if(!fullRandom && r!=="random" && a==="random"){
+    assetKey = pick(charA);
+  }
+  const res = buildPrompt(styleKey, assetKey, archKey);
+  lastGen = res;
+  // 用户指定了具体角色原型、但当前资产不适用角色原型 → 给出提示
+  let note = "";
+  if(archKey!=="random" && !charA.includes(assetKey)){
+    const chosen = ARCH[archKey] ? ARCH[archKey].zh : archKey;
+    note = `<div style="font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;padding:6px 10px;border-radius:8px;margin:6px 0;">⚠️ 你选择了角色原型【${chosen}】，但当前资产【${assetKey}】不适用角色原型（已改用对应词池）。如需固定该角色，请把资产类型也设为角色类。</div>`;
+  }
+  const box = document.getElementById("genBox");
+  box.innerHTML = `<div class="meta">${res.zh}</div>${note}<div class="en">${res.en}</div>`;
+  document.getElementById("genCopyRow").style.display = "flex";
+  // 同步到优化输入框
+  document.getElementById("inputPrompt").value = res.en;
+}
+
+/* ============ 复制 ============ */
+function copyText(t){
+  navigator.clipboard.writeText(t).then(()=>{
+    flash("已复制 ✓");
+  }).catch(()=>{ flash("复制失败，请手动选择"); });
+}
+let flashTimer;
+function flash(msg){
+  const el = document.getElementById("optStatus");
+  el.className = "status ok"; el.textContent = msg;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>{ el.textContent=""; }, 1500);
+}
+
+/* ============ DeepSeek 优化 ============ */
+const SYS_PROMPT = `你是一位资深 2D 游戏美术总监与 AI 生图提示词工程师。用户会给你一段（可能很粗糙的）游戏角色/美术描述或提示词。请将其优化为高质量、可直接用于 AI 图像生成（如 ImageGen / Midjourney）的英文提示词。要求：
+1) 采用【主体 + 画风 + 构图视角 + 光照氛围 + 技术规格（须含 transparent background 透明背景）】五段式结构；
+2) 补充缺失的光影、材质、构图、细节（服装、武器、表情）；
+3) 末尾统一追加负面约束（no text, no watermark, no extra limbs, no blurry, no 3D render 等），并在技术规格段保留 transparent background（透明背景，除非用户明确要求带背景或不透明）；
+4) 严格保留用户原始意图的核心要素，不要擅自更换主体；
+5) 先输出一段中文思路说明（不超过 3 句），再输出优化后的英文提示词（用 \`\`\`text 代码块包裹）。`;
+
+async function optimize(){
+  const key = document.getElementById("apiKey").value.trim();
+  const base = document.getElementById("apiBase").value.trim().replace(/\/+$/,"");
+  const model = document.getElementById("apiModel").value.trim();
+  const userPrompt = document.getElementById("inputPrompt").value.trim();
+  const status = document.getElementById("optStatus");
+  const optBox = document.getElementById("optBox");
+  const optContent = document.getElementById("optContent");
+
+  if(!key){ status.className="status err"; status.textContent="请先填写 DeepSeek API Key（展开上方 ⚙️ 配置）。"; return; }
+  if(!userPrompt){ status.className="status err"; status.textContent="待优化的提示词为空。"; return; }
+
+  // 本地保存
+  localStorage.setItem("ds_key", key);
+  localStorage.setItem("ds_base", base);
+  localStorage.setItem("ds_model", model);
+
+  status.className="status load"; status.textContent="⏳ 正在调用 DeepSeek 优化…";
+
+  try{
+    const resp = await fetch(base + "/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "Authorization":"Bearer "+key },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          { role:"system", content: SYS_PROMPT },
+          { role:"user", content: userPrompt }
+        ],
+        temperature: 0.7,
+        stream: false
+      })
+    });
+    if(!resp.ok){
+      const t = await resp.text();
+      throw new Error("HTTP "+resp.status+" "+t.slice(0,200));
+    }
+    const data = await resp.json();
+    const content = data.choices?.[0]?.message?.content || "(无返回内容)";
+    optContent.textContent = content;
+    // 解析英文块（```text / ```prompt 代码块内的内容），供"只复制英文"使用
+    const m = content.match(/```(?:text|prompt)?\s*\n([\s\S]*?)```/i);
+    optEnText = m ? m[1].trim() : content.trim();
+    optBox.style.display = "block";
+    document.getElementById("optCopyRow").style.display = "flex";
+    status.className="status ok"; status.textContent="✓ 优化完成";
+  }catch(e){
+    status.className="status err";
+    status.textContent = "✗ 调用失败：" + e.message + "（若是 CORS 跨域，请在 ⚙️ 把 Base URL 改为你的代理）";
+  }
+}
+
+/* ============ 事件绑定 ============ */
+document.getElementById("btnGen").onclick = ()=> renderGen(false);
+document.getElementById("btnGenFull").onclick = ()=> renderGen(true);
+document.getElementById("btnOpt").onclick = optimize;
+document.getElementById("btnUseGen").onclick = ()=>{
+  if(lastGen){ document.getElementById("inputPrompt").value = lastGen.en; flash("已填入上方随机结果"); }
+  else flash("请先随机生成");
+};
+document.getElementById("copyEn").onclick = ()=> lastGen && copyText(lastGen.en);
+document.getElementById("copyZh").onclick = ()=> lastGen && copyText(lastGen.zh);
+document.getElementById("copyOptEn").onclick = ()=> optEnText && copyText(optEnText);
+document.getElementById("copyOptFull").onclick = ()=> copyText(document.getElementById("optContent").textContent);
+
+// 恢复配置
+window.addEventListener("DOMContentLoaded", ()=>{
+  document.getElementById("apiKey").value = localStorage.getItem("ds_key")||"";
+  document.getElementById("apiBase").value = localStorage.getItem("ds_base")||"https://api.deepseek.com";
+  document.getElementById("apiModel").value = localStorage.getItem("ds_model")||"deepseek-chat";
+  renderGen(false); // 首次进入给一张
+});
+</script>
+</body>
+</html>
