@@ -6,24 +6,31 @@
 <title>2D 游戏角色提示词生成器 · × DeepSeek</title>
 <style>
   :root {
-    --bg: #0e0f1a;
-    --panel: #171a2b;
-    --panel-2: #1f2336;
-    --line: #2c3250;
-    --txt: #e6e9f5;
-    --muted: #8b91b5;
+    color-scheme: dark;
+    --txt: #f3f5fb;
+    --muted: rgba(243,245,255,0.64);
     --accent: #6c8cff;
     --accent-2: #b56cff;
     --good: #46d39a;
     --warn: #ffb454;
     --bad: #ff6b6b;
-    --radius: 14px;
+    --glass: rgba(255,255,255,0.10);
+    --glass-strong: rgba(255,255,255,0.16);
+    --glass-border: rgba(255,255,255,0.22);
+    --glass-hi: rgba(255,255,255,0.38);
+    --blur: 26px;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-    background: radial-gradient(1200px 600px at 50% -10%, #1a1d33 0%, var(--bg) 60%);
+    background:
+      radial-gradient(120% 120% at 10% 0%,  #3b2f8f 0%, transparent 55%),
+      radial-gradient(120% 120% at 92% 8%,  #7b2ff7 0%, transparent 52%),
+      radial-gradient(140% 140% at 85% 95%, #d6336c 0%, transparent 54%),
+      radial-gradient(120% 120% at 12% 95%, #1f6feb 0%, transparent 52%),
+      #0b1020;
+    background-attachment: fixed;
     color: var(--txt);
     min-height: 100vh;
     padding: 28px 16px 60px;
@@ -38,12 +45,14 @@
   }
   header p { color: var(--muted); margin: 0; font-size: 13px; }
   .card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+    background: var(--glass);
+    backdrop-filter: blur(var(--blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 22px;
     padding: 18px 18px 16px;
     margin-bottom: 18px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    box-shadow: 0 14px 44px rgba(0,0,0,0.32), inset 0 1px 0 var(--glass-hi);
   }
   .card h2 {
     font-size: 15px; margin: 0 0 14px; color: var(--txt);
@@ -54,28 +63,42 @@
   .field { flex: 1 1 200px; min-width: 160px; }
   label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
   select, input, textarea {
-    width: 100%; background: var(--panel-2); color: var(--txt);
-    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
-    font-size: 13px; font-family: inherit; outline: none; transition: border-color .15s;
+    width: 100%; background: rgba(10,12,24,0.55); color: var(--txt);
+    border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 12px;
+    font-size: 13px; font-family: inherit; outline: none; transition: border-color .15s, box-shadow .15s;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   }
-  select:focus, input:focus, textarea:focus { border-color: var(--accent); }
+  select:focus, input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,140,255,0.25); }
+  /* 原生下拉弹层：深色背景 + 浅色字，确保可读（color-scheme:dark 已开启） */
+  select option { background: #161a2b; color: #e6e9f5; }
+  select optgroup { color: #9aa3c7; background: #161a2b; }
   textarea { resize: vertical; line-height: 1.5; }
   .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
   button {
-    border: none; border-radius: 10px; padding: 11px 18px; font-size: 14px;
-    font-weight: 600; cursor: pointer; transition: transform .08s, filter .15s; color: #fff;
+    border: none; border-radius: 13px; padding: 11px 18px; font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: transform .08s, filter .15s, border-color .15s; color: #fff;
     font-family: inherit;
   }
   button:active { transform: translateY(1px); }
-  .btn-primary { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .btn-primary {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border: 1px solid rgba(255,255,255,0.35);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 18px rgba(108,140,255,0.42);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
   .btn-primary:hover { filter: brightness(1.08); }
-  .btn-ghost { background: var(--panel-2); border: 1px solid var(--line); color: var(--txt); }
+  .btn-ghost {
+    background: var(--glass-strong); border: 1px solid var(--glass-border); color: var(--txt);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 0 var(--glass-hi), 0 4px 14px rgba(0,0,0,0.2);
+  }
   .btn-ghost:hover { border-color: var(--accent); }
   .btn-sm { padding: 7px 12px; font-size: 12px; }
   .gen-box {
-    margin-top: 14px; background: var(--panel-2); border: 1px dashed var(--line);
-    border-radius: 10px; padding: 14px; font-size: 13px; line-height: 1.6;
+    margin-top: 14px; background: var(--glass-strong); border: 1px dashed var(--glass-border);
+    border-radius: 12px; padding: 14px; font-size: 13px; line-height: 1.6;
     white-space: pre-wrap; word-break: break-word;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   }
   .gen-box .meta { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
   .gen-box .en { color: var(--txt); }
@@ -91,8 +114,8 @@
   details { margin-top: 6px; }
   details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
   .foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 8px; }
-  code { background: var(--panel-2); padding: 2px 6px; border-radius: 6px; font-size: 12px; }
-  .pill { display:inline-block; background: var(--panel-2); border:1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 11px; color: var(--muted); margin: 2px 4px 2px 0;}
+  code { background: var(--glass-strong); border: 1px solid var(--glass-border); padding: 2px 6px; border-radius: 6px; font-size: 12px; }
+  .pill { display:inline-block; background: var(--glass-strong); border:1px solid var(--glass-border); border-radius: 999px; padding: 3px 10px; font-size: 11px; color: var(--muted); margin: 2px 4px 2px 0;}
 </style>
 </head>
 <body>

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图片去水印工具（离线 / 本地）</title>
+<style>
+  :root{
+    --txt:#f3f5fb; --sub:rgba(243,245,251,0.66);
+    --accent:#5aa9ff; --accent2:#3ee0a8; --warn:#ffc04d;
+    --glass:rgba(255,255,255,0.10);
+    --glass-strong:rgba(255,255,255,0.16);
+    --glass-border:rgba(255,255,255,0.22);
+    --glass-hi:rgba(255,255,255,0.38);
+    --blur:26px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;color:var(--txt);min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:
+      radial-gradient(120% 120% at 12% 6%,  #1b3a8f 0%, transparent 55%),
+      radial-gradient(120% 120% at 90% 10%, #8a2be2 0%, transparent 52%),
+      radial-gradient(140% 140% at 80% 94%, #d6336c 0%, transparent 54%),
+      radial-gradient(120% 120% at 16% 96%, #0fb8a0 0%, transparent 52%),
+      #0b1020;
+    background-attachment:fixed;
+  }
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(60% 60% at 50% 38%, rgba(255,255,255,0.06), transparent 70%);}
+  header{padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5;
+    background:var(--glass-strong);
+    backdrop-filter:blur(var(--blur)) saturate(180%);-webkit-backdrop-filter:blur(var(--blur)) saturate(180%);
+    border-bottom:1px solid var(--glass-border);
+    box-shadow:inset 0 1px 0 var(--glass-hi);}
+  header h1{font-size:16px;margin:0;font-weight:600}
+  header .tag{font-size:11px;color:var(--sub);
+    background:var(--glass);border:1px solid var(--glass-border);padding:3px 10px;border-radius:20px;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
+  .layout{display:flex;gap:16px;padding:16px;align-items:flex-start;flex-wrap:wrap}
+  .stage{flex:1 1 520px;min-width:320px;
+    background:var(--glass);
+    backdrop-filter:blur(var(--blur)) saturate(180%);-webkit-backdrop-filter:blur(var(--blur)) saturate(180%);
+    border:1px solid var(--glass-border);border-radius:22px;padding:16px;
+    box-shadow:0 14px 44px rgba(0,0,0,0.35), inset 0 1px 0 var(--glass-hi);
+    display:flex;flex-direction:column;gap:12px}
+  .side{flex:0 0 300px;min-width:260px;
+    background:var(--glass);
+    backdrop-filter:blur(var(--blur)) saturate(180%);-webkit-backdrop-filter:blur(var(--blur)) saturate(180%);
+    border:1px solid var(--glass-border);border-radius:22px;padding:18px;
+    box-shadow:0 14px 44px rgba(0,0,0,0.35), inset 0 1px 0 var(--glass-hi);
+    display:flex;flex-direction:column;gap:18px}
+  .drop{position:relative;border:1.5px dashed rgba(255,255,255,0.32);border-radius:16px;min-height:300px;
+    display:flex;align-items:center;justify-content:center;text-align:center;color:var(--sub);
+    cursor:pointer;overflow:auto;transition:.15s;
+    background:var(--glass);
+    backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}
+  .drop.over{border-color:var(--accent);background:rgba(90,169,255,0.16)}
+  .drop canvas{display:block;max-width:100%;height:auto;image-rendering:auto}
+  .canvas-wrap{position:relative;line-height:0}
+  .canvas-wrap canvas{position:absolute;left:0;top:0;pointer-events:none}
+  .canvas-wrap .base{position:relative;pointer-events:auto}
+  .hint{font-size:12px;color:var(--sub);line-height:1.6}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{
+    background:var(--glass-strong);color:var(--txt);border:1px solid var(--glass-border);border-radius:13px;
+    padding:9px 14px;font-size:13px;cursor:pointer;transition:.15s;
+    backdrop-filter:blur(14px) saturate(170%);-webkit-backdrop-filter:blur(14px) saturate(170%);
+    box-shadow:inset 0 1px 0 var(--glass-hi), 0 4px 14px rgba(0,0,0,0.22);}
+  .btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+  .btn.primary{background:linear-gradient(180deg, rgba(90,169,255,0.92), rgba(60,130,255,0.86));
+    border-color:rgba(120,190,255,0.6);color:#fff;font-weight:600;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 18px rgba(60,130,255,0.42);}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .btn.warn{background:linear-gradient(180deg, rgba(255,192,77,0.24), rgba(255,170,40,0.16));
+    border-color:rgba(255,192,77,0.5);color:var(--warn)}
+  label.fld{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--sub)}
+  .seg{display:flex;border:1px solid var(--glass-border);border-radius:13px;overflow:hidden;
+    background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+  .seg button{flex:1;background:transparent;color:var(--sub);border:0;padding:9px 6px;font-size:12px;cursor:pointer;transition:.12s}
+  .seg button.on{background:linear-gradient(180deg, rgba(90,169,255,0.92), rgba(60,130,255,0.8));color:#fff;font-weight:600}
+  input[type=range]{width:100%;height:6px;border-radius:6px;-webkit-appearance:none;appearance:none;
+    background:rgba(255,255,255,0.18);outline:none;accent-color:var(--accent)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:linear-gradient(180deg,#ffffff,#cfe2ff);border:1px solid rgba(255,255,255,0.6);
+    box-shadow:0 2px 8px rgba(0,0,0,0.35);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;
+    background:linear-gradient(180deg,#ffffff,#cfe2ff);border:1px solid rgba(255,255,255,0.6);cursor:pointer}
+  input[type=number]{background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--txt);
+    border-radius:10px;padding:7px 10px;width:90px;font-size:13px;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+  .val{font-size:12px;color:var(--accent2);min-width:34px;text-align:right}
+  .sec h3{margin:0 0 10px;font-size:13px;color:var(--txt);font-weight:600;
+    padding-left:10px;border-left:3px solid var(--accent);border-radius:2px}
+  .status{font-size:12px;min-height:16px}
+  .status.ok{color:var(--accent2)} .status.err{color:#ff6b6b} .status.load{color:var(--warn)}
+  .note{font-size:11px;color:var(--sub);line-height:1.7;border-top:1px solid var(--glass-border);padding-top:12px}
+  .kbd{background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:4px;padding:1px 6px;font-size:11px}
+  .empty-tip{padding:30px 16px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧽 图片去水印工具</h1>
+  <span class="tag">离线 · 本地处理 · 图片不出本机</span>
+</header>
+
+<div class="layout">
+  <!-- 画布 -->
+  <div class="stage">
+    <div class="row">
+      <button class="btn primary" id="loadBtn">📂 打开图片</button>
+      <button class="btn" id="undoMaskBtn" disabled>🩹 撤销选区</button>
+      <button class="btn warn" id="clearMaskBtn" disabled>✖ 清空选区</button>
+      <button class="btn" id="toggleMaskBtn" disabled>👁 隐藏红框</button>
+      <span class="status" id="stageStatus"></span>
+    </div>
+    <div class="drop" id="drop">
+      <div class="empty-tip" id="emptyTip">
+        把图片拖到这里，或点「打开图片」<br><br>
+        支持 PNG / JPG / WEBP。建议用 <b>透明背景 PNG</b>（AI 生成图多为透明底）。
+      </div>
+      <div class="canvas-wrap" id="cw" style="display:none">
+        <canvas class="base" id="base"></canvas>
+        <canvas id="mask"></canvas>
+      </div>
+    </div>
+    <div class="hint">操作：在图上 <b>按住鼠标拖动</b> 把水印区域涂成红色 → 选填充方式 → 点「修复」。滚轮可缩放笔刷。</div>
+  </div>
+
+  <!-- 控制面板 -->
+  <div class="side">
+    <div class="sec">
+      <h3>① 笔刷</h3>
+      <label class="fld">笔刷大小 <span class="val" id="brushVal">28</span>
+        <input type="range" id="brush" min="4" max="120" value="28">
+      </label>
+      <div class="row" style="margin-top:10px">
+        <button class="btn on" id="modePaint">🖌 涂选区</button>
+        <button class="btn" id="modeErase">🧽 橡皮擦</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>② 修复方式</h3>
+      <div class="seg" id="fillSeg">
+        <button data-fill="extend" class="on">邻近延展</button>
+        <button data-fill="diffuse">平滑扩散</button>
+      </div>
+      <div class="hint" style="margin-top:8px">
+        <b>邻近延展</b>：用最近的真实像素克隆填补，纹理保留更好，适合细水印/文字。<br>
+        <b>平滑扩散</b>：从边界做插值平滑填充，适合水印压在<b>纯色/透明</b>区域。
+      </div>
+      <label class="fld" style="margin-top:12px">延展搜索半径 <span class="val" id="radiusVal">30</span>
+        <input type="range" id="radius" min="5" max="80" value="30">
+      </label>
+      <label class="fld" style="margin-top:12px">扩散迭代次数 <span class="val" id="iterVal">120</span>
+        <input type="range" id="iters" min="20" max="400" value="120">
+      </label>
+    </div>
+
+    <div class="sec">
+      <h3>③ 执行</h3>
+      <div class="row">
+        <button class="btn primary" id="inpaintBtn" disabled>✨ 修复水印</button>
+        <button class="btn" id="downloadBtn" disabled>⬇ 下载 PNG</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="sec">
+      <h3>④ 快捷：裁剪底部</h3>
+      <div class="hint">水印常在最底部（如「图片由AI生成」）。直接裁掉底部 N 像素，最干净：</div>
+      <div class="row" style="margin-top:8px">
+        <input type="number" id="cropPx" value="40" min="1">
+        <span class="hint">px</span>
+        <button class="btn" id="cropBtn" disabled>裁剪</button>
+      </div>
+    </div>
+
+    <div class="note">
+      ⚠️ 仅用于<b>你拥有版权</b>或<b>自己生成的图片</b>。复杂水印（压在密集细节上）修复后可能有轻微痕迹，建议配合 Photoshop / Photopea 的「内容识别填充」做精修。<br>
+      本工具全部在浏览器本地运行，不上传任何数据。
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" style="display:none">
+
+<script>
+/* ============ 状态 ============ */
+let baseCanvas, maskCanvas, baseCtx, maskCtx, cw;
+let imgW=0, imgH=0;
+let origData=null;            // 原始像素（保护用备份）
+let mask=null;              // Uint8Array，1=选区
+let hasImage=false, hasMask=false;
+let maskVisible=true;
+let brushMode="paint";      // paint | erase
+let fillMode="extend";
+let painting=false, lastX=0, lastY=0;
+
+/* ============ 初始化 ============ */
+window.addEventListener("DOMContentLoaded", ()=>{
+  baseCanvas = document.getElementById("base");
+  maskCanvas = document.getElementById("mask");
+  baseCtx = baseCanvas.getContext("2d");
+  maskCtx = maskCanvas.getContext("2d");
+  cw = document.getElementById("cw");
+
+  const $ = id => document.getElementById(id);
+
+  $("loadBtn").onclick = ()=> $("fileInput").click();
+  $("fileInput").onchange = e => { if(e.target.files[0]) loadFile(e.target.files[0]); };
+
+  const drop = $("drop");
+  ["dragenter","dragover"].forEach(ev=> drop.addEventListener(ev, e=>{e.preventDefault();drop.classList.add("over");}));
+  ["dragleave","drop"].forEach(ev=> drop.addEventListener(ev, e=>{e.preventDefault();drop.classList.remove("over");}));
+  drop.addEventListener("drop", e=>{
+    const f = e.dataTransfer.files[0];
+    if(f && f.type.startsWith("image/")) loadFile(f);
+  });
+
+  $("brush").oninput = e=> $("brushVal").textContent = e.target.value;
+  $("radius").oninput = e=> $("radiusVal").textContent = e.target.value;
+  $("iters").oninput = e=> $("iterVal").textContent = e.target.value;
+
+  $("modePaint").onclick = ()=>{ brushMode="paint"; $("modePaint").classList.add("on"); $("modeErase").classList.remove("on"); };
+  $("modeErase").onclick = ()=>{ brushMode="erase"; $("modeErase").classList.add("on"); $("modePaint").classList.remove("on"); };
+
+  document.querySelectorAll("#fillSeg button").forEach(b=>{
+    b.onclick = ()=>{
+      fillMode = b.dataset.fill;
+      document.querySelectorAll("#fillSeg button").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+    };
+  });
+
+  $("undoMaskBtn").onclick = undoMask;
+  $("clearMaskBtn").onclick = clearMask;
+  $("toggleMaskBtn").onclick = ()=>{
+    maskVisible=!maskVisible;
+    maskCanvas.style.opacity = maskVisible ? "1":"0";
+    $("toggleMaskBtn").textContent = maskVisible ? "👁 隐藏红框" : "👁 显示红框";
+  };
+
+  $("inpaintBtn").onclick = inpaint;
+  $("downloadBtn").onclick = download;
+  $("cropBtn").onclick = cropBottom;
+
+  // 画布事件
+  baseCanvas.addEventListener("mousedown", startPaint);
+  baseCanvas.addEventListener("mousemove", movePaint);
+  window.addEventListener("mouseup", ()=> painting=false);
+  baseCanvas.addEventListener("mouseleave", ()=> painting=false);
+  baseCanvas.addEventListener("wheel", e=>{
+    if(!hasImage) return;
+    e.preventDefault();
+    const b = $("brush");
+    b.value = Math.max(4, Math.min(120, +b.value + (e.deltaY<0?4:-4)));
+    $("brushVal").textContent = b.value;
+  }, {passive:false});
+
+  // 触摸屏
+  baseCanvas.addEventListener("touchstart", e=>{e.preventDefault(); const p=pos(e.touches[0]); startPaintAt(p.x,p.y);}, {passive:false});
+  baseCanvas.addEventListener("touchmove", e=>{e.preventDefault(); const p=pos(e.touches[0]); paintAt(p.x,p.y);}, {passive:false});
+  baseCanvas.addEventListener("touchend", ()=> painting=false);
+});
+
+/* ============ 加载图片 ============ */
+function loadFile(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const im = new Image();
+    im.onload = ()=>{
+      imgW = im.naturalWidth; imgH = im.naturalHeight;
+      baseCanvas.width = maskCanvas.width = imgW;
+      baseCanvas.height = maskCanvas.height = imgH;
+      baseCtx.clearRect(0,0,imgW,imgH);
+      baseCtx.drawImage(im,0,0);
+      origData = baseCtx.getImageData(0,0,imgW,imgH);
+      mask = new Uint8Array(imgW*imgH);
+      hasImage=true; hasMask=false;
+      maskVisible=true; maskCanvas.style.opacity="1";
+
+      document.getElementById("emptyTip").style.display="none";
+      cw.style.display="block";
+      // 让画布按容器自适应宽度
+      fitCanvas();
+
+      setEnabled(true);
+      setStatus("stageStatus","图片已载入 "+imgW+"×"+imgH,"ok");
+      setStatus("status","");
+    };
+    im.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function fitCanvas(){
+  // 以容器宽度缩放显示（不改变内部分辨率）
+  const maxW = document.getElementById("drop").clientWidth - 28;
+  const scale = Math.min(1, maxW / imgW);
+  const dispW = Math.round(imgW*scale), dispH = Math.round(imgH*scale);
+  [baseCanvas, maskCanvas].forEach(c=>{ c.style.width=dispW+"px"; c.style.height=dispH+"px"; });
+}
+
+/* ============ 画笔 ============ */
+function pos(e){
+  const r = baseCanvas.getBoundingClientRect();
+  const sx = imgW / r.width, sy = imgH / r.height;
+  return { x:(e.clientX-r.left)*sx, y:(e.clientY-r.top)*sy };
+}
+function startPaint(e){ if(!hasImage) return; const p=pos(e); startPaintAt(p.x,p.y); }
+function startPaintAt(x,y){ painting=true; lastX=x; lastY=y; paintAt(x,y); }
+function movePaint(e){ if(!painting) return; const p=pos(e); paintAt(p.x,p.y); }
+
+function paintAt(x,y){
+  const br = +document.getElementById("brush").value;
+  const r = Math.max(1, Math.round(br/2));
+  const cx = Math.round(x), cy = Math.round(y);
+  // 在 mask 上画圆 + 在 maskCanvas 上画红
+  const mctx = maskCtx;
+  mctx.save();
+  mctx.beginPath();
+  mctx.arc(cx,cy,r,0,Math.PI*2);
+  mctx.fillStyle = brushMode==="paint" ? "rgba(255,40,60,0.55)" : "rgba(0,0,0,0)";
+  if(brushMode==="paint") mctx.fill();
+  else { mctx.globalCompositeOperation="destination-out"; mctx.fill(); }
+  mctx.restore();
+
+  // 更新 mask 数组（画线，连接 last->当前 避免断点）
+  drawLineMask(lastX,lastY,cx,cy,r);
+  lastX=cx; lastY=cy;
+  hasMask = true;
+  setEnabled(true);
+}
+
+function drawLineMask(x0,y0,x1,y1,r){
+  const dx=Math.abs(x1-x0), dy=Math.abs(y1-y0);
+  const sx=x0<x1?1:-1, sy=y0<y1?1:-1;
+  let err=dx-dy, x=x0, y=y0;
+  const v = brushMode==="paint"?1:0;
+  while(true){
+    stampMask(x,y,r,v);
+    if(x===x1 && y===y1) break;
+    const e2=2*err;
+    if(e2>-dy){ err-=dy; x+=sx; }
+    if(e2<dx){ err+=dx; y+=sy; }
+  }
+}
+function stampMask(cx,cy,r,v){
+  const x0=Math.max(0,cx-r), x1=Math.min(imgW-1,cx+r);
+  const y0=Math.max(0,cy-r), y1=Math.min(imgH-1,cy+r);
+  for(let y=y0;y<=y1;y++){
+    for(let x=x0;x<=x1;x++){
+      const dxx=x-cx, dyy=y-cy;
+      if(dxx*dxx+dyy*dyy <= r*r) mask[y*imgW+x]=v;
+    }
+  }
+}
+
+/* ============ 撤销 / 清空 ============ */
+let maskUndo=null;
+function undoMask(){
+  if(!maskUndo) return;
+  mask.set(maskUndo);
+  redrawMaskOverlay();
+  maskUndo=null;
+  hasMask = mask.some(v=>v===1);
+  setStatus("status","已撤销上一步选区","ok");
+}
+function clearMask(){
+  if(!hasImage) return;
+  mask.fill(0);
+  redrawMaskOverlay();
+  hasMask=false;
+  setStatus("status","选区已清空","ok");
+}
+function redrawMaskOverlay(){
+  maskCtx.clearRect(0,0,imgW,imgH);
+  maskCtx.fillStyle="rgba(255,40,60,0.55)";
+  for(let y=0;y<imgH;y++) for(let x=0;x<imgW;x++){
+    if(mask[y*imgW+x]) maskCtx.fillRect(x,y,1,1);
+  }
+}
+
+/* ============ 修复（核心） ============ */
+function bbox(){
+  let x0=imgW,y0=imgH,x1=0,y1=0,any=false;
+  for(let y=0;y<imgH;y++) for(let x=0;x<imgW;x++){
+    if(mask[y*imgW+x]){ any=true; if(x<x0)x0=x; if(y<y0)y0=y; if(x>x1)x1=x; if(y>y1)y1=y; }
+  }
+  if(!any) return null;
+  return {x0:x0-1,y0:y0-1,x1:x1+2,y1:y1+2};
+}
+
+function inpaint(){
+  if(!hasImage || !hasMask){ setStatus("status","请先用笔刷涂选水印区域","err"); return; }
+  const bb = bbox();
+  if(!bb){ setStatus("status","未检测到选区","err"); return; }
+  setStatus("status","修复中…","load");
+  // 让 UI 先刷新
+  setTimeout(()=>{
+    const src = baseCtx.getImageData(0,0,imgW,imgH);
+    const out = fillMode==="extend"
+      ? inpaintExtend(src, mask, bb, +document.getElementById("radius").value)
+      : inpaintDiffuse(src, mask, bb, +document.getElementById("iters").value);
+    baseCtx.putImageData(out,0,0);
+    maskCtx.clearRect(0,0,imgW,imgH);
+    hasMask=false;
+    setStatus("status","✓ 修复完成，可下载或继续微调","ok");
+  },30);
+}
+
+/* 邻近延展：每个未知像素取最近已知像素的颜色 */
+function inpaintExtend(src, mask, bb, maxR){
+  const {x0,y0,x1,y1}=bb;
+  const w=imgW, h=imgH;
+  const data = new Uint8ClampedArray(src.data);
+  const dirs=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+  for(let y=y0;y<y1;y++){
+    for(let x=x0;x<x1;x++){
+      const idx=y*w+x;
+      if(!mask[idx]) continue;
+      let found=false;
+      for(let r=1;r<=maxR && !found;r++){
+        for(const [dx,dy] of dirs){
+          const nx=x+dx*r, ny=y+dy*r;
+          if(nx<0||ny<0||nx>=w||ny>=h) continue;
+          const nidx=ny*w+nx;
+          if(!mask[nidx]){
+            const o=nidx*4, t=idx*4;
+            data[t]=data[o]; data[t+1]=data[o+1]; data[t+2]=data[o+2]; data[t+3]=data[o+3];
+            found=true; break;
+          }
+        }
+      }
+    }
+  }
+  return new ImageData(data,w,h);
+}
+
+/* 平滑扩散：Jacobi 迭代解 Laplace 方程，边界为已知像素 */
+function inpaintDiffuse(src, mask, bb, iters){
+  const {x0,y0,x1,y1}=bb;
+  const w=imgW, h=imgH;
+  const data = new Uint8ClampedArray(src.data);
+  for(let it=0; it<iters; it++){
+    for(let pass=0; pass<2; pass++){
+      for(let y=y0;y<y1;y++){
+        for(let x=x0;x<x1;x++){
+          const idx=y*w+x;
+          if(!mask[idx]) continue;
+          if(((x+y)&1)!==pass) continue;
+          let r=0,g=0,b=0,a=0,c=0;
+          const nb=[[1,0],[-1,0],[0,1],[0,-1]];
+          for(const [dx,dy] of nb){
+            const nx=x+dx, ny=y+dy;
+            if(nx<0||ny<0||nx>=w||ny>=h) continue;
+            const nidx=ny*w+nx;
+            if(!mask[nidx]){ const o=nidx*4; r+=data[o]; g+=data[o+1]; b+=data[o+2]; a+=data[o+3]; c++; }
+          }
+          if(c>0){ const o=idx*4; data[o]=r/c; data[o+1]=g/c; data[o+2]=b/c; data[o+3]=a/c; }
+        }
+      }
+    }
+  }
+  return new ImageData(data,w,h);
+}
+
+/* ============ 裁剪底部 ============ */
+function cropBottom(){
+  if(!hasImage) return;
+  const n = Math.max(1, Math.round(+document.getElementById("cropPx").value));
+  if(n>=imgH){ setStatus("status","裁剪像素超过图片高度","err"); return; }
+  const newH = imgH-n;
+  const src = baseCtx.getImageData(0,0,imgW,newH);
+  const tmp = document.createElement("canvas"); tmp.width=imgW; tmp.height=newH;
+  tmp.getContext("2d").putImageData(src,0,0);
+  const im = new Image();
+  im.onload = ()=>{
+    imgH=newH;
+    baseCanvas.height=maskCanvas.height=newH;
+    baseCtx.clearRect(0,0,imgW,newH);
+    baseCtx.drawImage(im,0,0);
+    origData=baseCtx.getImageData(0,0,imgW,newH);
+    mask=new Uint8Array(imgW*imgH);
+    fitCanvas();
+    setStatus("status","✓ 已裁掉底部 "+n+"px","ok");
+  };
+  im.src = tmp.toDataURL();
+}
+
+/* ============ 下载 ============ */
+function download(){
+  if(!hasImage) return;
+  const a=document.createElement("a");
+  a.download="no-watermark.png";
+  a.href=baseCanvas.toDataURL("image/png");
+  a.click();
+  setStatus("status","已导出 no-watermark.png","ok");
+}
+
+/* ============ 工具 ============ */
+function setEnabled(on){
+  ["undoMaskBtn","clearMaskBtn","toggleMaskBtn","inpaintBtn","downloadBtn","cropBtn"].forEach(id=>{
+    document.getElementById(id).disabled = !on;
+  });
+}
+function setStatus(id,msg,cls){
+  const el=document.getElementById(id);
+  el.textContent=msg||"";
+  el.className="status"+(cls?(" "+cls):"");
+}
+</script>
+</body>
+</html>
